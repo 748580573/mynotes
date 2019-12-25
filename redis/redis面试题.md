@@ -78,7 +78,7 @@ rdb是redis DataBase缩写
 
 功能核心函数rdbSave(生成RDB文件)和rdbLoad(从文件加载内存)两个函数
 
-![](.\img\2.png)
+![](./img/2.png)
 
 AOF：
 
