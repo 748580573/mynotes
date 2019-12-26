@@ -4,7 +4,11 @@ string类型
 
 格式：set key value
 
+<<<<<<< HEAD
 redis的键类型是二进制安全的。意思是redis的key可以包含任何数据。比如jpg图片或者序列化的对象，一个null string 也是一个有效的key。
+=======
+redis的键类型是二进制安全的。意思是redis的string可以包含任何数据。比如jpg图片或者序列化的对象，一个null string 也是一个有效的key。
+>>>>>>> d1b4888d5f5164d213aeb0b1da25b556d6dcb904
 
 string类型是redis最基本的数据类型，一个键最大能存储512M,一个值最大也是512M。
 
