@@ -4,9 +4,9 @@ string类型
 
 格式：set key value
 
-string类型是二进制安全的。意思是redis的string可以包含任何数据。比如jpg图片或者序列化的对象。
+redis的键类型是二进制安全的。意思是redis的string可以包含任何数据。比如jpg图片或者序列化的对象，一个null string 也是一个有效的key。
 
-string类型是redis最基本的数据类型，一个键最大能存储512M。
+string类型是redis最基本的数据类型，一个键最大能存储512M,一个值最大也是512M。
 
 
 
