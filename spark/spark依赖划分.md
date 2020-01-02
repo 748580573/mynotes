@@ -7,6 +7,7 @@
 窄依赖是指**每一个**父RDD的Partition最多被子RDD的一个Partition使用
 ![rdd窄依赖划分](./img/20191120/2.png)  
 一种很简单的判断方式就是看父RDD的Partition的输出箭尾是否只有一个
+
 ## 宽依赖(wide Dependency/shuffle Dependency)
 宽依赖指的是多个子RDD的Partition会依赖同一个父Rddd的Partition,就会引起Shuffle。
 宽依赖指的是多个子RDD的Partition会依赖同一个父Rddd的Partition,就会引起Shuffle。
@@ -35,3 +36,4 @@ stage是相对于job而言的，一个job由多个转换操作组成，当转换
 task的执行速度是跟每个Executor进程的CPU core数量有直接关系的。一个CPU core同一时间只能执行一个线程。而每个Executor进程上分配到的多个task，都是以每个task一条线程的方式，多线程并发运行的。如果CPU core数量比较充足，而且分配到的task数量比较合理，那么通常来说，可以比较快速和高效地执行完这些task线程。
 
 如果我们的task数量超过cores总数，则先执行cores个数量的task，然后等待cpu资源空闲后，继续执行剩下的task。
+

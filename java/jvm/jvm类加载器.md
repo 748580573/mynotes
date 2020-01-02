@@ -2,7 +2,7 @@
 
 ## 1.1 在java代码中，类型的加载，连接，初始化过程都是在程序都是在程序运行期间完成的。
 
-![](./img/jvmclassloader/1.png)
+![](../img/jvmclassloader/1.png)
 
 类型的加载--这里的类型是指的什么？
 
@@ -18,15 +18,15 @@
 
 ### 通过什么来进行加载？（类加载器）
 
-![](./img/jvmclassloader/2.png)
+![](../img/jvmclassloader/2.png)
 
 ## 类加载器的层级结构
 
-![./img/jvmclassloader/3.png](./img/jvmclassloader/3.png)
+![../img/jvmclassloader/3.png](../img/jvmclassloader/3.png)
 
 
 
-## 证明AppClassLoader的弗雷是ExetensClassLoader
+## 证明AppClassLoader的父类是ExetensClassLoader
 
 ````java
 public static void main(String[] args) {
@@ -56,13 +56,13 @@ null
 3. main
 4. new
 5. Class.forname
-6. 子类初始化一定会触发我们的弗雷
+6. 子类初始化一定会触发我们的父类
 
 初始化一定会触发类加载
 
 类加载不一定初始化
 
-![./img/jvmclassloader/4.png](./img/jvmclassloader/4.png)
+![../img/jvmclassloader/4.png](../img/jvmclassloader/4.png)
 
 这里需要结合Launcher类的源码，以及对ClassLoader.loadClass()源码进行分析
 
