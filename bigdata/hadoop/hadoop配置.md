@@ -94,3 +94,10 @@ slave2
 </configuration>
 ````
 
+
+
+
+
+#### 格式化namenode
+
+hadoop namenode -format
