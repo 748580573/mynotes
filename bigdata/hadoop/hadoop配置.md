@@ -20,6 +20,14 @@ slave2
                 <!-- 配置临时目录-->
                 <value>file:/usr/local/hadoop-2.8.4/tmp</value>
         </property>
+        <property>
+                <name>hadoop.proxyuser.root.hosts</name>
+                <value>*</value>
+        </property>
+        <property>
+                <name>hadoop.proxyuser.root.groups</name>
+                <value>*</value>
+        </property>
 </configuration>
 ````
 
