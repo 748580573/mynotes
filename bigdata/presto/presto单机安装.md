@@ -2,7 +2,7 @@
 
 #### 第一步：下载安装包
 
-去presto官网下载安装包https://prestodb.io/download.html，俺用这个版本presto-server-0.218.tar.gz。将下载的安装包上传到linux的/home/presto目录下，并解压，得到presto-server-0.218目录。
+去presto官网下载安装包[download](https://prestodb.io/download.html)，俺用这个版本presto-server-0.218.tar.gz。将下载的安装包上传到linux的/home/presto目录下，并解压，得到presto-server-0.218目录。
 
 ![](./img/1.png)
 
@@ -177,7 +177,7 @@ cd /home/presto/presto-server-0.218/bin
 
 去官网下载presto-cli-0.218-executable.jar包
 
-[download]: https://repo1.maven.org/maven2/com/facebook/presto/presto-server/0.218/
+[download](https://repo1.maven.org/maven2/com/facebook/presto/presto-server/0.218/ )
 
 将presto-cli-0.218-executable.jar上传至/home/presto/presto-server-0.218/bin
 
