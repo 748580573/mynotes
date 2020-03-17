@@ -151,6 +151,17 @@ connector.name=hive-hadoop2
 hive.metastore.uri=thrift://master:9083
 hive.config.resources=/home/softwore/hadoop-2.7.6/etc/hadoop/core-site.xml,/home/softwore/hadoop-2.7.6/etc/hadoop/hdfs-site.xml
 #-DHADOOP_USER_NAME=root
+#配置Presto访问HiveMetastore服务的Kerberos信息，该段配置可以只存在Presto的Coordinator节点
+hive.metastore.authentication.type=KERBEROS
+hive.metastore.service.principal=hive/_HOST@FAYSON.COM
+hive.metastore.client.principal=presto/admin@FAYSON.COM
+hive.metastore.client.keytab=/opt/cloudera/parcels/presto/etc/presto.keytab
+
+#配置Presto访问HDFS的Kerberos信息，改段配置可以只存在Presto的Worker节点
+hive.hdfs.authentication.type=KERBEROS
+hive.hdfs.impersonation.enabled=true
+hive.hdfs.presto.principal=presto/admin@FAYSON.COM
+hive.hdfs.presto.keytab=/opt/cloudera/parcels/presto/etc/presto.keytab
 ````
 
 弄完了上面的步骤/home/presto/presto-server-0.218/etc/的目录结构应该时这样的
