@@ -119,7 +119,7 @@ com.facebook.presto=INFO
 
 连接配置文件的详情可以在这里去看
 
-[presto-Connection]: https://prestodb.io/docs/current/connector.html
+[presto连接配置](https://prestodb.io/docs/current/connector.html )
 
 创建jmx.properties文件
 
