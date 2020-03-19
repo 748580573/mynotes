@@ -188,7 +188,7 @@ cd /home/presto/presto-server-0.218/bin
 
 去官网下载presto-cli-0.218-executable.jar包
 
-[download](https://repo1.maven.org/maven2/com/facebook/presto/presto-server/0.218/ )
+[download](https://repo1.maven.org/maven2/com/facebook/presto/presto-cli/ )
 
 将presto-cli-0.218-executable.jar上传至/home/presto/presto-server-0.218/bin
 
