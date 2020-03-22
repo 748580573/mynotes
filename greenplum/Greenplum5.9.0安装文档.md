@@ -183,7 +183,7 @@ gpinitsystem -c initgp_config -h seg_hosts_file
     su gpadmin
     psql -p 2345
     修改数据库密码
-        alter role gpadmin with password 'bigdata2018';
+        alter role gpadmin with password '123456';
     \q
 ```
 

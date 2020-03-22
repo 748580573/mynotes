@@ -58,7 +58,7 @@ NETMASK ：广播地址
 
 ![](./img/network/6.png)
 
-再向vim etc/resolv.conf中加入
+再向vim /etc/resolv.conf中加入
 
 nameserver 8.8.8.8
 
