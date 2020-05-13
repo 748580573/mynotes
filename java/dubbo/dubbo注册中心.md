@@ -37,7 +37,7 @@ Dubbo 之前版本主要可以使用 ZooKeeper，Redis 作为注册中心 ，而
 
 注册中心实现使用模板模式，源码位于 dubbo-registry 模块，类关系如下图：
 
-![image.png](./img/registry/注册中心类设计.png)
+![image.png](./img/registry/registryDesign.png)
 
 最上层的 `RegistryService` 接口定义了核心方法，分别为注册，取消注册，订阅，取消订阅以及查询。
 
