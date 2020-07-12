@@ -4,7 +4,7 @@
 
 ![](./img/structurediagram/1.png)
 
-
+* 一个Invoker表示一个服务提供者
 
 
 
@@ -17,3 +17,4 @@
 ## 容错
 
 ![](./img/structurediagram/3.png)
+

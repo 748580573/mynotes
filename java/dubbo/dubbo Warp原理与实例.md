@@ -1,7 +1,5 @@
 # Dubbo Wrapper 原理与实例
 
-> 转自https://www.jianshu.com/p/57d53ff17062
-
 Dubbo Wrapper 可以认为是一种反射机制。它既可以读写目标实例的字段，也可以调用目标实例的方法。比如
 
 - Car是接口；RaceCar是实现类，实现了Car；ferrari和porsche是RaceCar的两个实例
@@ -10,7 +8,7 @@ Dubbo Wrapper 可以认为是一种反射机制。它既可以读写目标实例
 - 通过wrapper0#invokeMethod来调用ferrari的方法，也可以调用porsche的方法
 - 优点：通过一个Wrapper0实例就可以操作N个目标接口Car的实例
 
-比如我们有一个Car接口，定义了3个方法：
+比如我们有一个DemoService接口，定义了3个方法：
 
 
 
@@ -123,7 +121,3 @@ public class Wrapper0 extends Wrapper implements DC {
 ```
 
 可以认为是重写了JDK的反射机制。
-
-
-
-0人点赞
