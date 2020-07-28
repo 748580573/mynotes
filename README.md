@@ -12,9 +12,9 @@ These are some study notes that I usually collect or write by myself
 
 [springcloud](https://github.com/748580573/mynotes/tree/master/java/springcloud)
 
-[多线程]([https://github.com/748580573/mynotes/tree/master/%E5%A4%9A%E7%BA%BF%E7%A8%8B](https://github.com/748580573/mynotes/tree/master/多线程))
+[多线程](https://github.com/748580573/mynotes/tree/master/多线程)
 
-[设计模式]([https://github.com/748580573/mynotes/tree/master/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F](https://github.com/748580573/mynotes/tree/master/设计模式))
+[设计模式](https://github.com/748580573/mynotes/tree/master/设计模式)
 
 [tomcat](https://github.com/748580573/mynotes/tree/master/java/tomcat)
 
@@ -32,9 +32,9 @@ These are some study notes that I usually collect or write by myself
 
 [impala](https://github.com/748580573/mynotes/tree/master/bigdata/impala)
 
-[kafka]([https://github.com/748580573/mynotes/blob/master/bigdata/kafka/kafka%E5%91%BD%E4%BB%A4.md](https://github.com/748580573/mynotes/blob/master/bigdata/kafka/kafka命令.md))
+[kafka](https://github.com/748580573/mynotes/blob/master/bigdata/kafka)
 
-[phoenix]([https://github.com/748580573/mynotes/blob/master/bigdata/kafka/kafka%E5%91%BD%E4%BB%A4.md](https://github.com/748580573/mynotes/blob/master/bigdata/kafka/kafka命令.md))
+[phoenix](https://github.com/748580573/mynotes/blob/master/bigdata/kafka/kafka命令.md)
 
 [preso](https://github.com/748580573/mynotes/tree/master/bigdata/presto)
 
