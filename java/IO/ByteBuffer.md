@@ -1,3 +1,5 @@
+[toc]
+
 # Java IO
 
 ### ByteBuffer
