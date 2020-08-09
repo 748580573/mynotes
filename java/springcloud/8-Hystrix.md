@@ -10,17 +10,17 @@ Hystrix 是处理分布式系统的延迟和容错的开源库，保证一个依
 https://github.com/Netflix/Hystrix
 停更
 # Hystrix重要概念
-### 服务降级
+### 服务降级(fallback)
 1. 服务器忙，请稍后重试，不让客户端等待并立即返回一个友好的提示。
 2. 哪些情况会导致服务降级
     1. 程序运行异常
     2. 超时
     3. 服务熔断触发服务降级
     4. 线程池/信号量打满
-### 服务熔断
+### 服务熔断(break)
 1. 类比保险丝达到最大服务访问时，直接拒绝访问，拉闸限电，然后调用服务降级的方法返回友好提示。
 2. 服务降级->进而熔断->恢复调用链路
-### 服务限流
+### 服务限流(flowlimit)
 1. 秒杀高并发等操作，严禁一窝蜂过来拥挤，一秒N个有序进行。
 # 案例
 ### 准备cloud-provider-hystrix-payment8001
@@ -180,16 +180,20 @@ feign:
     ```
 2. 第二个问题
     1. 找到注解 @FeignClient 对应的接口
+    
     2. 再写一个类实现该接口，对降级方法进行处理
         ```java
         @Component
         @FeignClient(value = "CLOUD-PROVIDER-HYSTRIX-PAYMENT",fallback = PaymentFallBackService.class)
-        public interface PaymentHystrixService {}
-
+    public interface PaymentHystrixService {}
+    
         @Component
         public class PaymentFallBackService implements PaymentHystrixService {}
         ```
+        
     3. 测试在 8001 内加异常，或使 8001 宕机 ，返回异常处理
+    
+    > 注意： 服务降级指定的fallbackmehtod方法的参数与需被服务降级的方法的参数是一致的（即被@HystrixCommand修饰的方法
 # 服务熔断
 ### 简介
 类比保险丝，达到最大访问后直接拒绝访问，拉闸限电，然后调用服务降级。当检测==到该节点微服务调用正常后，恢复调用链路。==
