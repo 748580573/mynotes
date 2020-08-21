@@ -165,7 +165,7 @@ $ sudo system restart docker
 
 #### docker 工作流程
 
-<img src="./imgs/docker/1.png" style="zoom:50%;" />
+<img src="./imgs/1.png" style="zoom:50%;" />
 
 #### docker是怎么工作的呢？
 
@@ -173,14 +173,14 @@ Docker是一个Client + Server结构的系统，Docker的守护进程运行在�
 
 DockerServer接收到Docker + Client的指令，就会执行这个命令！
 
-<img src="./imgs/docker/2.png" style="zoom:50%;" />
+<img src="./imgs/2.png" style="zoom:50%;" />
 
 #### Docker为什么会比VM快
 
 1. docker有着比虚拟机更少的抽象层。由于docker不需要Hypervisor实现硬件资源虚拟化,运行在docker容器上的程序直接使用的都是实际物理机的硬件资源。因此在CPU、内存利用率上docker将会在效率上有明显优势。
 2. docker利用的是宿主机的内核,而不需要Guest OS。因此,当新建一个容器时,docker不需要和虚拟机一样重新加载一个操作系统内核。仍而避免引寻、加载操作系统内核返个比较费时费资源的过程,当新建一个虚拟机时,虚拟机软件需要加载Guest OS,返个新建过程是分钟级别的。而docker由于直接利用宿主机的操作系统,则省略了返个过程,因此新建一个docker容器只需要几秒钟。
 
-<img src="./imgs/docker/3.png" style="zoom:50%;" />
+<img src="./imgs/3.png" style="zoom:50%;" />
 
 <img src="./imgs/docker/4.png" style="zoom:50%;" />
 
@@ -907,7 +907,7 @@ docker commit -m="提交的描述信息" -a="作者信息" [容器id] 目标镜�
 
 这就是卷技术！即目录的挂载，将我们容器内的目录，挂载到Linux上面！
 
-<img src="./imgs/docker/6.png" style="zoom:67%;" />
+<img src="./imgs/6.png" style="zoom:67%;" />
 
 **总结：就是要解决容器与本地文件系统之间的关联关系（共享文件夹）**
 
@@ -954,7 +954,7 @@ Docker为我们提供了Dockerfile来解决自动化的问题。下面，我们�
 3. 表示注释
 4. 每一行命令都会创建提交一个镜像层，并提交！
 
-<img src="./imgs/docker/8.jpg" style="zoom:67%;" />
+<img src="./imgs/8.jpg" style="zoom:67%;" />
 
 #### 命令
 
@@ -1072,7 +1072,7 @@ VOLUME ["/data"]
 
 用一张通俗易懂的图来总结下：
 
-<img src="./imgs/docker/7.png" style="zoom:67%;" />
+<img src="./imgs/7.png" style="zoom:67%;" />
 
 #### 实战
 
@@ -1238,6 +1238,102 @@ CMD /usr/local/apache-tomcat-8.5.37/bin/startup.sh  && tailf /usr/local/apache-t
 docker run -it -p 8324:8080 mytomcat:0.1
 ````
 
+#### 给镜像打标签
+
+````shell
+# docker tag  标记本地镜像，将其归入某一仓库
+docker tag [imageId] [REGISTRYHOST]/[imageName]:[version]
+
+docker tag ba6516e4804d heng/mytomcat:2.0
+````
 
 
-docker run -it -port 8234:8080 mytomcat:0.2  bin/bash
+
+#### 将自己的镜像发布
+
+登录docker 
+
+````shell
+[root@localhost ~]# docker login  --help
+
+Usage:	docker login [OPTIONS] [SERVER]
+
+Log in to a Docker registry.
+If no server is specified, the default is defined by the daemon.
+
+Options:
+  -p, --password string   Password
+      --password-stdin    Take the password from stdin
+  -u, --username string   Username
+````
+
+登录成功后，直接docker push
+
+````shell
+docker push [作者名]/[容器名]:[tag]
+````
+
+
+
+#### 小结
+
+<img src="./imgs/9.jpg" style="zoom:67%;" />
+
+
+
+### Docker 网络
+
+先查看物理机的ip
+
+````shell
+[root@localhost ~]# ip addr
+# lo 本机回环地址
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+# ens33 内网地址
+2: ens33: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 00:0c:29:93:ec:2a brd ff:ff:ff:ff:ff:ff
+    inet 192.168.238.134/24 brd 192.168.238.255 scope global dynamic ens33
+       valid_lft 5168151sec preferred_lft 5168151sec
+    inet6 fe80::20c:29ff:fe93:ec2a/64 scope link 
+       valid_lft forever preferred_lft forever
+# docker0 docker生成的一个网卡
+3: docker0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
+    link/ether 02:42:5b:55:b2:1a brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::42:5bff:fe55:b21a/64 scope link 
+       valid_lft forever preferred_lft forever
+````
+
+上图结果中，可以看到一共存在三个网络，那么docker是怎么处理容器访问的网络呢？
+
+````shell
+#运行并进入docker容器，查看该容器的ip地址
+[root@c2dee87151a2 local]# ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+# 注意，容器在启动后，查看该容器的ip，发现一个202: eth0@if203 ip地址,docker分配的！
+202: eth0@if203: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+       
+# linux 能否ping通该ip呢(172.17.0.2)
+[root@localhost ~]# ping 172.17.0.2
+PING 172.17.0.2 (172.17.0.2) 56(84) bytes of data.
+64 bytes from 172.17.0.2: icmp_seq=1 ttl=64 time=0.198 ms
+64 bytes from 172.17.0.2: icmp_seq=2 ttl=64 time=0.105 ms
+64 bytes from 172.17.0.2: icmp_seq=3 ttl=64 time=0.055 ms
+....
+
+````
+
+
+
