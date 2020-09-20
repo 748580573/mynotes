@@ -1337,3 +1337,66 @@ PING 172.17.0.2 (172.17.0.2) 56(84) bytes of data.
 
 
 
+#### Docker自定义网络
+
+**查看已有网络**
+
+````shell
+[root@localhost ~]# docker network ls
+NETWORK ID          NAME                DRIVER              SCOPE
+8f9fd81c8c86        bridge              bridge              local
+d93d561639bf        host                host                local
+9eeedee75ba9        none                null                local
+````
+
+**创建新的网络 mynet**
+
+````
+
+[root@localhost ~]# docker network create --driver bridge --subnet 192.168.0.0/16 --gateway  192.168.0.1 mynet
+f4da435c747d0ea7c8c6c0c10ab766a101b4fa62ea0be23c8b7c72cfe1a26621
+[root@localhost ~]# docker network ls
+NETWORK ID          NAME                DRIVER              SCOPE
+8f9fd81c8c86        bridge              bridge              local
+d93d561639bf        host                host                local
+f4da435c747d        mynet               bridge              local
+9eeedee75ba9        none                null                local
+# 查看网络详情
+[root@localhost ~]# docker network inspect mynet
+[
+    {
+        "Name": "mynet",
+        "Id": "f4da435c747d0ea7c8c6c0c10ab766a101b4fa62ea0be23c8b7c72cfe1a26621",
+        "Created": "2020-08-23T10:22:01.289618948-04:00",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": {},
+            "Config": [
+                {
+                    "Subnet": "192.168.0.0/16",
+                    "Gateway": "192.168.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {},
+        "Options": {},
+        "Labels": {}
+    }
+]
+````
+
+**用创建的网络创建tomcat容器**
+
+````shell
+[root@localhost ~]# docker run -d -p 8123:8080 --name heng2  --net mynet mytomcat:20
+````
