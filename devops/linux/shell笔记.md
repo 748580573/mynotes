@@ -402,7 +402,7 @@ fi
 **-n**
 
 ````shell
-如果 string长度为零，则为真 	[ -z "$myvar" ]
+如果 string长度不为零，则为真 	[ -n "$myvar" ]
 ````
 
 
