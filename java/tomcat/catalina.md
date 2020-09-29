@@ -39,3 +39,13 @@ PRGDIR=`dirname "$PRG"`
 #上面一段代码。 如果$CATALINA_HOME为空，则给CATALINA_HOME赋值。
 # cd "$PRGDIR/.." >/dev/null 是将cd命令产生的信息清楚掉
 ```
+
+
+
+
+
+````shell
+#catalina.sh 脚本最终生成的脚本为
+nohup /home/F/java_plug/jdk1.8.0_191/bin/java 	-Djava.util.logging.config.file=/home/test/apache-tomcat-8.5.37/conf/logging.properties       -Djava.util.logging.config.file=/home/test/apache-tomcat-8.5.37/conf/logging.properties  -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager -Djdk.tls.ephemeralDHKeySize=2048  -Djava.protocol.handler.pkgs=org.apache.catalina.webresources -Dorg.apache.catalina.security.SecurityListener.UMASK=0027 -Dignore.endorsed.dirs="" -classpath "/home/test/apache-tomcat-8.5.37/bin/bootstrap.jar:/home/test/apache-tomcat-8.5.37/bin/tomcat-juli.jar" -Dcatalina.base="/home/test/apache-tomcat-8.5.37" -Dcatalina.home="/home/test/apache-tomcat-8.5.37"  -Djava.io.tmpdir="/home/test/apache-tomcat-8.5.37/temp" org.apache.catalina.startup.Bootstrap start >> /home/test/apache-tomcat-8.5.37/logs/catalina.out 2>&1 &
+````
+
