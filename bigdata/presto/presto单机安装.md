@@ -76,7 +76,7 @@ vim /home/presto/presto-server-0.218/etc/jvm.config
 ##### 创建config.properties
 
 ````
-touch -p /home/presto/presto-server-0.218/etc/config.properties
+touch  /home/presto/presto-server-0.218/etc/config.properties
 ````
 
 ##### 编辑config.properties文件
