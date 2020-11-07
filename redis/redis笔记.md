@@ -466,6 +466,15 @@ OK
 (1.66s)
 ````
 
+##### Llen查询链表长度
+
+````shell
+127.0.0.1:6379> llen list
+(integer) 4
+````
+
+
+
 ##### Lrange范围查询
 
 ````shell
@@ -617,3 +626,1069 @@ OK
 4) "k1"
 ````
 
+
+
+#### Set(无序不重复集合)
+
+##### Sadd 添加元素
+
+````shell
+127.0.0.1:6379> Sadd myset hello
+(integer) 1
+127.0.0.1:6379> Sadd myset world
+(integer) 1
+````
+
+##### Smembers获取某个key的所有数据
+
+````shell
+127.0.0.1:6379> smembers test
+1) "1"
+2) "2"
+3) "3"
+4) "4
+````
+
+##### Scard查询set的元素个数
+
+````shell
+127.0.0.1:6379> Scard myset
+(integer) 2
+````
+
+##### Srem从set中移除元素
+
+````shell
+127.0.0.1:6379> Srem myset hello
+(integer) 1
+````
+
+##### Srandmember随机获取set中的元素
+
+````shell
+127.0.0.1:6379> Sadd myset hello
+(integer) 1
+127.0.0.1:6379> Sadd myset meximexi
+(integer) 1
+127.0.0.1:6379> Sadd myset aoligei
+(integer) 1
+127.0.0.1:6379> Srandmember myset
+"aoligei"
+127.0.0.1:6379> Srandmember myset
+"world"
+127.0.0.1:6379> Srandmember myset
+"world"
+127.0.0.1:6379> Srandmember myset
+"meximexi"
+````
+
+##### Spop随机移除元素
+
+````shell
+127.0.0.1:6379> spop myset
+"meximexi"
+127.0.0.1:6379> spop myset
+"world"
+````
+
+##### Smove移动元素到另一个set中
+
+````shell
+127.0.0.1:6379> sadd myset2 lalala
+127.0.0.1:6379> sadd myset2 hello
+127.0.0.1:6379> smove myset myset2 aoligei
+(integer) 0
+127.0.0.1:6379> Srandmember myset2 4
+1) "lalala"
+2) "hello"
+3) "aoligei"
+````
+
+##### Sdiff求多个集合的差集
+
+````shell
+127.0.0.1:6379> Sdiff myset myset2
+(empty array)
+127.0.0.1:6379> Sdiff myset2 myset
+1) "lalala"
+2) "hello"
+3) "aoligei"
+````
+
+##### Sinter求多个集合交集
+
+````shell
+127.0.0.1:6379> Srandmember myset 4
+1) "hello"
+127.0.0.1:6379> Srandmember myset2 4
+1) "lalala"
+2) "hello"
+3) "aoligei"
+127.0.0.1:6379> Sinter myset myset2
+1) "hello"
+````
+
+##### Sunion求多个集合并集
+
+````shell
+127.0.0.1:6379> Srandmember myset 4
+1) "hello"
+127.0.0.1:6379> Srandmember myset2 4
+1) "lalala"
+2) "hello"
+3) "aoligei"
+127.0.0.1:6379> Sunion myset myset2
+1) "lalala"
+2) "aoligei"
+3) "hello"
+````
+
+#### Hash(hash，key-value)
+
+##### Hset添加元素
+
+````
+# hset hashkey field  value
+127.0.0.1:6379> hset myhash name hw
+(integer) 1
+````
+
+##### Hget获取元素
+
+````shell
+# hget hashkey field
+127.0.0.1:6379> hget myhash key1
+"hw"
+````
+
+##### Hmset 添加多个元素
+
+````shell
+# hmset hashkey [field value]+
+127.0.0.1:6379> hmset myhash  key2 hw2  key3  hw3
+OK
+````
+
+##### Hmget获取多个元素
+
+````shell
+#hmset hashkey [field]+
+127.0.0.1:6379> hmget myhash key1 key2 key3
+1) "hw"
+2) "hw3"
+3) "hw3"
+````
+
+##### Hgetall获取全部的数据
+
+````shell
+#hgetall hashkey
+127.0.0.1:6379> hgetall myhash
+1) "key1"      #field
+2) "hw"        #value
+3) "key2"
+4) "hw3"
+5) "key3"
+6) "hw3"
+````
+
+##### Hdel删除指定的field
+
+````shell
+127.0.0.1:6379> hdel myhash key1
+(integer) 1
+127.0.0.1:6379> hgetall myhash
+1) "key2"
+2) "hw3"
+3) "key3"
+4) "hw3
+````
+
+##### Hlen获取key的长度
+
+````shell
+127.0.0.1:6379> hlen myhash
+(integer) 2
+````
+
+##### Hexist判断field是否存在
+
+````shell
+#判断hash里的field是否存在
+127.0.0.1:6379> Hgetall myhash
+1) "key2"
+2) "hw3"
+3) "key3"
+4) "hw3"
+127.0.0.1:6379> Hexists myhash key2
+(integer) 1
+127.0.0.1:6379> Hexists myhash key1
+(integer) 0
+````
+
+##### Hkeys获取某个key的所有field
+
+````shell
+127.0.0.1:6379> Hkeys myhash
+1) "key2"
+2) "key3"
+````
+
+##### Hvals获取某个key的所有的value
+
+````shell
+127.0.0.1:6379> Hvals myhash
+1) "hw3"
+2) "hw3"
+````
+
+##### Hincrby给某个field做加法
+
+````shell
+#Hincrby key field addNuber
+127.0.0.1:6379> Hgetall myhash
+1) "number"
+2) "1"
+3) "number2"
+4) "2"
+5) "number3"
+6) "3"
+127.0.0.1:6379> Hincrby myhash number  3
+(integer) 4
+127.0.0.1:6379> Hgetall myhash
+1) "number"
+2) "4"
+3) "number2"
+4) "2"
+5) "number3"
+6) "3"
+````
+
+##### Hsetnx如果不存在field则可以设置
+
+````shell
+#Hsetnx key field value
+#如果存在则不可以设置
+127.0.0.1:6379> Hsetnx myhash number 10
+(integer) 0
+127.0.0.1:6379> Hgetall myhash
+1) "number"
+2) "4"
+3) "number2"
+4) "2"
+5) "number3"
+6) "3"
+#如果不存在则可以设置
+127.0.0.1:6379> Hsetnx myhash number10 10
+(integer) 1
+127.0.0.1:6379> Hgetall myhash
+1) "number"
+2) "4"
+3) "number2"
+4) "2"
+5) "number3"
+6) "3"
+7) "number10"
+8) "10"
+````
+
+#### Zset（有序集合)
+
+##### Zadd 添加值
+
+````shell
+#zadd key score value
+127.0.0.1:6379> zadd  salary  3000 zhangsan
+(integer) 1
+127.0.0.1:6379> zadd  salary  2000 lisi
+(integer) 1
+127.0.0.1:6379> zadd  salary  1000 wangwu
+(integer) 1
+127.0.0.1:6379> zrange salary 0 -1
+1) "wangwu"
+2) "lisi"
+3) "zhangsan"
+````
+
+##### zrange获取某个key的所有信息
+
+````shell
+127.0.0.1:6379> zrange salary 0 -1
+1) "wangwu"
+2) "lisi"
+3) "zhangsan"
+````
+
+##### Zrangebyscore升序排序
+
+````shell
+#zrangebyscore key min max [WITHSCORES] [LIMIT offset count]
+#这里-inf  +inf表示的是范围，即从负无穷到正无穷按升序排序
+127.0.0.1:6379> Zrangebyscore salary -inf +inf 
+1) "wangwu"
+2) "lisi"
+3) "zhangsan"
+#对score中2000到3000的值进行升序排序
+127.0.0.1:6379> Zrangebyscore salary 2000 3000
+1) "lisi"
+2) "zhangsan"
+#将value对应的score也一起打印出来
+127.0.0.1:6379> Zrangebyscore salary -inf +inf withscores
+1) "wangwu"
+2) "1000"
+3) "lisi"
+4) "2000"
+5) "zhangsan"
+6) "3000"
+````
+
+##### Zrevrangebyscore降序排序
+
+````shell
+#Zrevrangebyscore salary max min [WITHSCORES] [LIMIT offset count]
+127.0.0.1:6379> ZREVRANGEBYSCORE salary +inf -inf
+1) "zhangsan"
+2) "lisi"
+3) "wangwu"
+````
+
+##### Zrmv删除元素
+
+````shell
+#  Zrem key member [member ...]
+127.0.0.1:6379> ZREM salary lisi
+(integer) 1
+127.0.0.1:6379> ZREVRANGEBYSCORE salary +inf -inf
+1) "zhangsan"
+2) "wangwu"
+````
+
+##### Zcard统计Zset里的元素个数
+
+````shell
+ #zcard key
+ 127.0.0.1:6379> zcard salary
+(integer) 2
+````
+
+#####  Zcount统计指定区间的元素数量
+
+````shell
+#Zcount key min max
+127.0.0.1:6379> zrange salary 0 -1 withscores
+1) "wangwu"
+2) "1000"
+3) "lisi"
+4) "2000"
+5) "zhangsan"
+6) "3000"
+127.0.0.1:6379> zcount salary 2000 3000
+(integer) 2
+````
+
+
+
+#### Geospatial地理位置
+
+##### Geoadd添加地理位置
+
+经度（longitude）必须放在纬度（latitude）之前，对于可被索引的坐标位置是有一定限制条件的：非常靠近极点的位置是不能被索引的，
+
+- 有效的经度是-180度到180度
+- 有效的纬度是-85.05112878度到85.05112878度
+
+````shell
+# Geoadd key longitude latitude member [longitude latitude member ...]
+127.0.0.1:6379> Geoadd cities 116.404269 39.91582 "beijing"  121.478799 31.23545 "shanghai"
+(integer) 2
+````
+
+##### Zrange获取某个key的所有的位置信息
+
+````shell
+127.0.0.1:6379> Zrange cities 0 -1 withscores
+1) "shanghai"
+2) "4054803475356098"
+3) "beijing"
+4) "4069885555377153"
+````
+
+##### Geodist返回一个key中指定两个位置的距离
+
+````shell
+#Geodist key member1 member2 [m|km|ft|mi]
+127.0.0.1:6379> Geodist cities beijing shanghai km
+"1068.5682"
+````
+
+##### Geohash返回一个或多个位置的经纬度信息
+
+````shell
+Geohash key member [member ...]
+127.0.0.1:6379> Geohash cities beijing
+1) "wx4g0f7n800"
+````
+
+#####  Geopos返回一个或多个位置的经纬度信息
+
+````shell
+#Geopos key member [member ...]
+127.0.0.1:6379> Geopos cities beijing
+1) 1) "116.40426903963088989"
+   2) "39.91581928642635546"
+````
+
+##### Georadius以给定位置为中心，半径不超过给定半径的附近所有位置
+
+````shell
+#Georadius key longitude latitude radius m|km|ft|mi [WITHCOORD] [WITHDIST] [WITHHASH] [COUNT count] [ASC|DESC] [STORE key] [STORED]
+127.0.0.1:6379> GEORADIUS cities 120 30 500 km
+1) "shanghai"
+````
+
+##### Georadiusbymember指定已添加的某个位置作为中心,半径不超过给定半径的附近所有位置
+
+````shell
+GEORADIUSBYMEMBER key member radius m|km|ft|mi [WITHCOORD] [WITHDIST] [WITHHASH] [COUNT count] [ASC|DESC] [STORE key] [STOREDIST
+127.0.0.1:6379> Georadiusbymember cities shanghai 3000 km
+1) "shanghai"
+2) "beijing"
+````
+
+#### Hyperloglog
+
+##### 简介
+
+Redis HyperLogLog 是用来做基数统计的算法，HyperLogLog 的优点是，在输入元素的数量或者体积非常非常大时，计算基数所需的空间总是固定 的、并且是很小的。
+
+在 Redis 里面，每个 HyperLogLog 键只需要花费 12 KB 内存，就可以计算接近 2^64 个不同元素的基 数。这和计算基数时，元素越多耗费内存就越多的集合形成鲜明对比。
+
+但是，因为 HyperLogLog 只会根据输入元素来计算基数，而不会储存输入元素本身，所以 HyperLogLog 不能像集合那样，返回输入的各个元素。
+
+##### 什么是基数
+
+比如数据集 {1, 3, 5, 7, 5, 7, 8}， 那么这个数据集的基数集为 {1, 3, 5 ,7, 8}, 基数(不重复元素)为5。 基数估计就是在误差可接受的范围内，快速计算基数。
+
+##### 基数的应用实例
+
+下面通过一个实例说明基数在电商数据分析中的应用。
+
+假设一个淘宝网店在其店铺首页放置了10个宝贝链接，分别从Item01到Item10为这十个链接编号。店主希望可以在一天中随时查看从今天零点开始到目前这十个宝贝链接分别被多少个独立访客点击过。所谓独立访客（Unique Visitor，简称UV）是指有多少个自然人，例如，即使我今天点了五次Item01，我对Item01的UV贡献也是1，而不是5。
+
+用术语说这实际是一个实时数据流统计分析问题。
+
+要实现这个统计需求。需要做到如下三点：
+
+1、对独立访客做标识
+
+2、在访客点击链接时记录下链接编号及访客标记
+
+3、对每一个要统计的链接维护一个[数据结构](http://lib.csdn.net/base/31)和一个当前UV值，当某个链接发生一次点击时，能迅速定位此用户在今天是否已经点过此链接，如果没有则此链接的UV增加1
+
+下面分别介绍三个步骤的实现方案
+
+**对独立访客做标识**
+
+客观来说，目前还没有能在互联网上准确对一个自然人进行标识的方法，通常采用的是近似方案。例如通过登录用户+cookie跟踪的方式：当某个用户已经登录，则采用会员ID标识；对于未登录用户，则采用跟踪cookie的方式进行标识。为了简单起见，我们假设完全采用跟踪cookie的方式对独立访客进行标识。
+
+**实时UV计算**
+
+#### BigMap（位图）
+
+##### setbit添加
+
+````shell
+#setbit key offset value
+127.0.0.1:6379> setbit sign 1 0
+(integer) 
+````
+
+##### Getbit获取
+
+````shell
+127.0.0.1:6379> getbit sign 1
+(integer) 1
+````
+
+##### Bitcount(统计)
+
+````shell
+# bitcount key [start end]
+127.0.0.1:6379> setbit sign 0 1
+(integer) 0
+127.0.0.1:6379> setbit sign 1 0
+(integer) 1
+127.0.0.1:6379> setbit sign 2 0
+(integer) 0
+127.0.0.1:6379> setbit sign 3 0
+(integer) 0
+127.0.0.1:6379> bitcount sign
+(integer) 1
+````
+
+#### Redis基本的事务操作
+
+redis保证命令的原子性，但是redis事务不保证的原子性
+
+redis没有隔离级别的概念
+
+##### Redis的三个阶段
+
+* 开启事务(multi)
+
+* 命令入队
+
+* 执行事务(exec)
+
+````shell
+127.0.0.1:6379> MULTI
+OK
+127.0.0.1:6379> set k1 v1
+QUEUED
+127.0.0.1:6379> set k2 v2
+QUEUED
+127.0.0.1:6379> get k2
+QUEUED
+127.0.0.1:6379> set k3 v3 
+QUEUED
+127.0.0.1:6379> exec
+1) OK
+2) OK
+3) "v2"
+4) OK
+````
+
+##### (discard)放弃事务
+
+````shell
+127.0.0.1:6379> multi
+OK
+127.0.0.1:6379> set k1 v1
+QUEUED
+127.0.0.1:6379> set k2 v2
+QUEUED
+127.0.0.1:6379> set k3 v3
+QUEUED
+127.0.0.1:6379> set k4 v4
+QUEUED
+127.0.0.1:6379> discard
+OK
+127.0.0.1:6379> get k4
+(nil)
+````
+
+##### 注意事项
+
+在redis事务执行过程中，如果事务中的其中一个命令有语法错误，在事务执行时，其他的命令也会照常执行。
+
+
+
+#### 悲观锁
+
+> 认为，什么时候都会出问题，无论做什么都需要加锁
+
+
+
+#### （watch)乐观锁
+
+一般watch命令与事务是一起使用的，WATCH命令可以监控一个或多个键，一旦其中有一个键被修改（或删除），之后的事务就不会执行。监控一直持续到EXEC命令（事务中的命令是在EXEC之后才执行的，所以在MULTI命令后可以修改WATCH监控的键值）
+
+
+
+#### Jedis
+
+##### 导入pom
+
+````xml
+        <!-- https://mvnrepository.com/artifact/redis.clients/jedis -->
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>3.3.0</version>
+        </dependency>
+````
+
+然后reids的java客户端的api跟上文所描述的api一一对应。
+
+#### SpringBoot整合Redis
+
+##### 导入pom
+
+````xml
+<dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+````
+
+##### 说明
+
+在SpringBoot2.x之后，jeids被替换为了lettuce。
+
+jedis：采用直连，多个线程操作的话，是不安全的，如果想要避免不安全性，使用jedis pool连接池！
+
+lettuce：采用netty，示例可以再多个线程中进行共享，不存在线程不安全的情况！可以减少线程数量。
+
+##### 使用
+
+````java
+//set普通的set key value操作
+        redisTemplate.opsForValue();
+        //list操作
+        redisTemplate.opsForList();
+        //Set集合操作
+        redisTemplate.opsForSet();
+        //Hash操作
+        redisTemplate.opsForHash();
+        //ZSet操作
+        redisTemplate.opsForZSet();
+        //Geospatial操作
+        redisTemplate.opsForGeo();
+        //Hyperloglog操作
+        redisTemplate.opsForHyperLogLog();
+        //bigmap操作
+        redisTemplate.opsForValue().setBit()
+````
+
+##### 自定义RedisTemplate
+
+```java
+@Configuration
+public class RedisConfig {
+
+    @Bean
+    @SuppressWarnings("all")
+    public RedisTemplate<String,Object> redisTemplate(RedisConnectionFactory factory){
+        //我们为了方便，一般直接使用<String,Object>
+        RedisTemplate<String,Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(factory);
+
+        //JSON序列化配置
+        Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
+        ObjectMapper om = new ObjectMapper();
+        om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.DEFAULT);
+        om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+        jackson2JsonRedisSerializer.setObjectMapper(om);
+
+        //String的序列化
+        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
+
+        //key采用String的徐丽华暗示
+        template.setKeySerializer(stringRedisSerializer);
+        //hash的key也采用String的序列化方式
+        template.setHashKeySerializer(stringRedisSerializer);
+        //value采用jackson方式序列化
+        template.setValueSerializer(jackson2JsonRedisSerializer);
+        //hash的value序列化方式采用jackson
+        template.setHashValueSerializer(jackson2JsonRedisSerializer);
+        template.afterPropertiesSet();
+        return template;
+    }
+}
+```
+
+#### Redis.conf
+
+##### 单位
+
+redis中的单位有1k,1kb,1m,1mb,1g,1gb
+
+````xml
+# Note on units: when memory size is needed, it is possible to specify
+# it in the usual form of 1k 5GB 4M and so forth:
+#
+# 1k => 1000 bytes
+# 1kb => 1024 bytes
+# 1m => 1000000 bytes
+# 1mb => 1024*1024 bytes
+# 1g => 1000000000 bytes
+# 1gb => 1024*1024*1024 bytes
+#
+# units are case insensitive so 1GB 1Gb 1gB are all the same.
+````
+
+#####  inclue 包含其他文件
+
+可以将其他配置文件组合一起，共同形成redis的配置文件
+
+````shell
+################################## INCLUDES ###################################
+
+# Include one or more other config files here.  This is useful if you
+# have a standard template that goes to all Redis servers but also need
+# to customize a few per-server settings.  Include files can include
+# other files, so use this wisely.
+#
+# Notice option "include" won't be rewritten by command "CONFIG REWRITE"
+# from admin or Redis Sentinel. Since Redis always uses the last processed
+# line as value of a configuration directive, you'd better put includes
+# at the beginning of this file to avoid overwriting config change at runtime.
+#
+# If instead you are interested in using includes to override configuration
+# options, it is better to use include as the last line.
+#
+# include /path/to/local.conf
+# include /path/to/other.conf
+
+````
+
+##### bind 绑定ip
+
+````shell
+默认情况下，如果未指定“ bind”配置指令，则Redis会侦听服务器上所有可用网络接口的连接。可以使用“ bind”配置指令侦听一个或多个选定接口，然后侦听一个 或更多IP地址。
+Examples:
+
+bind 192.168.1.100 10.0.0.1
+bind 127.0.0.1 ::1
+````
+
+##### port设置端口
+
+````
+redis服务的端口设置
+````
+
+##### daemonize守护进程方式运行（后台运行）
+
+````she
+By default Redis does not run as a daemon. Use 'yes' if you need it.
+Note that Redis will write a pid file in /var/run/redis.pid when daemonized.
+````
+
+##### pidfile进程文件
+
+````shell
+如果指定了pid文件，则Redis会在启动时将其写入指定位置并在退出时将其删除。
+
+当服务器在非守护进程中运行时，如果没有pid文件，则不会创建在配置中指定。 守护服务器时，pid文件即使未指定，也使用，默认为“ /var/run/redis.pid”。
+
+redis会尽力创建pid文件：如果Redis无法创建它不会发生任何不良情况，服务器将启动并正常运行。
+````
+
+##### loglevel设置日志等级
+
+````
+# debug (a lot of information, useful for development/testing)
+# verbose (many rarely useful info, but not a mess like the debug level)
+# notice (moderately verbose, what you want in production probably) 生产环境使用
+# warning (only very important / critical messages are logged)
+loglevel notice
+````
+
+##### logfile日志文件名
+
+````
+# Specify the log file name. Also the empty string can be used to force
+# Redis to log on the standard output. Note that if you use standard
+# output for logging but daemonize, logs will be sent to /dev/null
+logfile ""
+````
+
+##### databases默认数据库数量
+
+````
+# Set the number of databases. The default database is DB 0, you can select
+# a different one on a per-connection basis using SELECT <dbid> where
+# dbid is a number between 0 and 'databases'-1
+````
+
+##### 是否显示log
+
+````
+always-show-logo yes
+````
+
+##### save快照
+
+持久化，在规定的时间内，执行了多少次操作，则将数据进行持久化(.rdb,.aof)。
+
+````shell
+save 900 1         #如果900秒内至少有1个key改变，则进行持久化
+save 300 10        #如果300秒内至少有10个key改变，则进行持久化
+save 60 10000      #如果60秒内至少有1w个key改变，则进行持久化
+
+````
+
+##### stop-writes-on-bgsave-error 持久化出错后是否继续工作
+
+````
+stop-writes-on-bgsave-error yes
+````
+
+##### rdbcompression开启rdb文件压缩
+
+````shell
+rdbcompression yes
+````
+
+##### rdbchecksum校验rdb文件
+
+保存rdb文件的时候，进行错误校验 
+
+````shell
+rdbchecksum yes
+````
+
+##### dbfilename 设置rdb文件名称
+
+````shell
+dbfilename dump.rdb
+````
+
+##### requirepass设置redis访问密码
+
+````shell
+requirepass  123456
+#获取在redis客户端中设置
+config set requirepass "123456"
+````
+
+##### maxclients设置最大客户端的数量
+
+````shell
+maxclients 10000
+````
+
+##### maxmemory 设置redis可使用的最大值
+
+redis默认不会对内存使用进行限制
+
+````shell
+maxmemory 1048576
+maxmemory 1048576B
+maxmemory 1000KB
+maxmemory 100MB
+maxmemory 1GB
+maxmemory 1000K
+maxmemory 100M
+maxmemory 1G
+````
+
+##### maxmemory-policy内存到达上限的策略
+
+````shell
+1、volatile-lru：只对设置了过期时间的key进行LRU（默认值） 
+2、allkeys-lru ： 删除lru算法的key   
+3、volatile-random：随机删除即将过期key   
+4、allkeys-random：随机删除   
+5、volatile-ttl ： 删除即将过期的   
+6、noeviction ： 永不过期，返回错误
+````
+
+
+
+##### appendonly开启aof模式
+
+````shell
+appendonly  no
+````
+
+##### appendfilename持久化文件的名字
+
+````shell
+appendfilename "appendonly.aof"
+````
+
+##### appendfsync aof同步
+
+````shell
+appendfsync everysec  #每秒sync
+appendfsync always    #每次修改都sync
+appendfsync no        #不执行sync，操作系统自己同步数据，速度最快
+````
+
+
+
+#### RDB(Redis Database)
+
+Redis是内存数据库，如果不将内存中的数据库状态保存到磁盘，那么服务器进程一旦推出，服务器中的数据也将消失。所有redis提供了持久化的操作。
+
+![](./img/8.jpg)
+
+Redis会单独fork一个子进程来进行持久化，会先将数据写入一个临时文件中，待持久化过程都结束了，在用这个临时文件替换上次持久化好的文件。整个过程中，主进程是不会进行任何IO操作的。这确保了极高的性能。如果需要进行大规模数据的恢复，且对于上一次数据的完整性不是特别敏感，那RDB方式要比AOF方式更高效。RDB的缺点是最后一次持久化后的数据可能丢失。我们默认的就是RDB，一般情况下不需要修改这个配置。
+
+##### 如何恢复RDB文件
+
+将RDB文件放在redis的启动目录下
+
+````shell
+# 将RDB文件放在dir目录下面
+127.0.0.1:6379> config get dir
+1) "dir"
+2) "/usr/local/bin"
+````
+
+也可以直接去redis.conf里查看dir的配置
+
+````shell
+# The working directory.
+#
+# The DB will be written inside this directory, with the filename specified
+# above using the 'dbfilename' configuration directive.
+#
+# The Append Only File will also be created inside this directory.
+#
+# Note that you must specify a directory here, not a file name.
+dir ./
+````
+
+##### RDB的优缺点
+
+**优点**
+
+1. 适合大数据的数据恢复！
+2. 对数据的完整性要求不高!
+
+**缺点**
+
+1. 需要一定的时间进行进程操作,如果redis宕机了，最后一次修改的数据就会没了！
+2. fork进程的时候会占用的一定的内容空间。
+
+
+
+#### AOF (Append Only File)
+
+ 以日志的形式来记录每个写操作，将Redis执行过的所有写指令记录下来(读操作不记录)，只许追加文件但不可以改写文件，redis启动之初会读取该文件重新构建数据，换言之，redis重启的话就根据日志文件的内容将写指令从前到后执行一次以完成数据的恢复工作。
+
+<img src="./img/9.png" style="zoom:67%;" />
+
+##### 开启aof
+
+将appendonly的值设置为yes，则开启了aof,开启了aof后，在redis正常运行期间就不会出发rdb了，但是redis被shutdown后会出发rdb操作，但对aof方式没有任何影响。
+
+````shell
+# By default Redis asynchronously dumps the dataset on disk. This mode is
+# good enough in many applications, but an issue with the Redis process or
+# a power outage may result into a few minutes of writes lost (depending on
+# the configured save points).
+#
+# The Append Only File is an alternative persistence mode that provides
+# much better durability. For instance using the default data fsync policy
+# (see later in the config file) Redis can lose just one second of writes in a
+# dramatic event like a server power outage, or a single write if something
+# wrong with the Redis process itself happens, but the operating system is
+# still running correctly.
+#
+# AOF and RDB persistence can be enabled at the same time without problems.
+# If the AOF is enabled on startup Redis will load the AOF, that is the file
+# with the better durability guarantees.
+#
+# Please check http://redis.io/topics/persistence for more information.
+appendonly yes
+````
+
+##### AOF文件检测
+
+如果aof文件有错，或者被破坏了，这个时候redis是启动不起来的，因此我们需要修复这个文件。
+
+redis给我们提供了一个工具`redis-check-aof --fix`,
+
+````shell
+[root@master bin]# redis-check-aof --fix appendonly.aof 
+0x              87: Expected \r\n, got: 6473
+AOF analyzed: size=153, ok_up_to=110, diff=43
+This will shrink the AOF from 153 bytes, with 43 bytes, to 110 bytes
+Continue? [y/N]: y
+Successfully truncated AOF
+[root@master bin]# 
+````
+
+如果文件正常了，这个时候就可以redis-server就能够启动起来了。
+
+##### AOF重写机制(rewrite)
+
+**重写机制是什么：**
+
+​      AOF采用文件追加方式，文件会越来越大为避免出现此种情况，新增了重写机制, 当AOF文件的大小超过所设定的阈值时，Redis就会启动AOF文件的内容压缩，只保留可以恢复数据的最小指令集.可以使用命令bgrewriteaof
+
+​    **重写原理**
+
+​      AOF文件持续增长而过大时，会**fork**出一条新进程来将文件重写(也是先写临时文件最后再rename)，遍历新进程的内存中数据，每条记录有一条的Set语句。重写aof文件的操作，并没有读取旧的aof文件，而是将整个内存中的数据库内容用命令的方式重写了一个新的aof文件，这点和快照有点类似
+
+​    **触发机制**
+
+​      Redis会记录上次重写时的AOF大小，默认配置是当AOF文件大小是上次rewrite后大小的一倍且文件大于64M时触发。请见配置文件默认是，auto-aof-rewrite-percentage 100的意思是超过100%，也就是一倍；auto-aof-rewrite-min-size 64mb是查过64mb。
+
+​      这里插一句，假如你到一家新公司，老板把公司吹的天花乱坠，什么技术有多牛，业务量有多大。如果他们使用aof来做redis持久化，这时候，你只要偷偷看一眼他们redis的这个配置项auto-aof-rewrite-min-size，如果是64mb，那么你就应该心领神会了——这个公司要么业务量根本没这么大，要么这个公司的人并不怎么牛。真正大型系统，3gb都是起步，64mb根本是在搞笑。这个配置时观察一个公司水平的一个很好的维度。
+
+##### AOF的优缺点
+
+**优点**
+
+1. 每一次修改都同步，文件完整性会更好！
+
+2. 每秒同步一次，可能会丢失一秒的数据
+
+**缺点**
+
+1. aop文件远远大于rdb，因此数据恢复的速度远小于rdb
+2. AOF的运行效率也比rdb慢，因此redis的默认配置是rdb而不是aop
+
+#### 发布订阅
+
+##### 概念讲解
+
+Redis发布订阅（pub/sub)是一种消息通信模式：发布者(pub)发送消息，订阅者（sub)接受消息。
+
+<img src="./img/10.jpg" style="zoom:80%;" />
+
+
+
+Redis 发布订阅 (pub/sub) 是一种消息通信模式：发送者 (pub) 发送消息，订阅者 (sub) 接收消息。
+
+Redis 客户端可以订阅任意数量的频道。
+
+下图展示了频道 channel1 ， 以及订阅这个频道的三个客户端 —— client2 、 client5 和 client1 之间的关系：
+
+![img](./img/11.png)
+
+当有新消息通过 PUBLISH 命令发送给频道 channel1 时， 这个消息就会被发送给订阅它的三个客户端：
+
+![img](./img/12.png)
+
+##### redis发布订阅的命令
+
+下表列出了 redis 发布订阅常用命令：
+
+| 序号 | 命令及描述                                                   |
+| :--- | :----------------------------------------------------------- |
+| 1    | [PSUBSCRIBE pattern [pattern ...\]](https://www.runoob.com/redis/pub-sub-psubscribe.html) 订阅一个或多个符合给定模式的频道。 |
+| 2    | [PUBSUB subcommand [argument [argument ...\]]](https://www.runoob.com/redis/pub-sub-pubsub.html) 查看订阅与发布系统状态。 |
+| 3    | [PUBLISH channel message](https://www.runoob.com/redis/pub-sub-publish.html) 将信息发送到指定的频道。 |
+| 4    | [PUNSUBSCRIBE [pattern [pattern ...\]]](https://www.runoob.com/redis/pub-sub-punsubscribe.html) 退订所有给定模式的频道。 |
+| 5    | [SUBSCRIBE channel [channel ...\]](https://www.runoob.com/redis/pub-sub-subscribe.html) 订阅给定的一个或多个频道的信息。 |
+| 6    | [UNSUBSCRIBE [channel [channel ...\]]](https://www.runoob.com/redis/pub-sub-unsubscribe.html) 指退订给定的频道。 |
+
+启动一个redis客户端，订阅
+
+````shell
+[root@master bin]# redis-cli 
+127.0.0.1:6379> subscribe yxlm
+Reading messages... (press Ctrl-C to quit)
+1) "subscribe"
+2) "yxlm"
+3) (integer) 1
+1) "message"
+2) "yxlm"
+3) "lalala,demaxiya"
+````
+
+启动另一个redis客户端，发布消息
+
+````shell
+[root@master ~]# redis-cli 
+127.0.0.1:6379> PUBLISH yxlm lalala,demaxiya
+(integer) 1
+127.0.0.1:6379> 
+````
+
+##### 使用场景
+
+1. 消息系统
+2. 实时聊天（聊天室）
+3. 关注系统
