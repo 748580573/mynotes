@@ -1827,7 +1827,7 @@ replicaof <masterip> <masterport>
 masterauth <master-password>
 ````
 
-#### 注意点
+##### 注意点
 
 在redis的主从架构中，存在一下几个值得关注的特点
 
@@ -1837,3 +1837,168 @@ masterauth <master-password>
    * Slave连接master成功后，会向master发送一个sync命令，master接收到命令后会在后台启动存盘进程，同时收集所有接收到用于修改数据的命令，在后台进程执行完毕后，master会将整个数据文件传送大slave，并一次完成同步。
    * 全量复制：当slave连接到master的时候，会将接收到数据文件后，会将文件存盘然后存储到内存中。
    * 增量复制：Master继续将新的收集到的修改命令传送到slave，完成同步
+
+
+
+#### 哨兵模式（自动选master)
+
+##### 概述
+
+主从切换的技术方式是：如果主节点挂掉了吗，就需要人工手动去切换到新的主节点，这样做费事费力，会造成长时间的服务不可用，并且容易出错。因此这种方式，能不采用就不采用。更多的时候，我们应该优先考虑哨兵模式。
+
+哨兵模式是一种特殊的模式，首先redis提供了哨兵的命令，哨兵是一个独立的进程，作为进程，它会独立运行。**其原理就是哨兵通过发送命令，等待redis服务器响应，从而监控运行的多个redis实例**,如果监测的master挂了后，会自动去切换master节点。
+
+![单哨兵](./img/14.jpg)
+
+哨兵在集群中有两个作用：
+
+1. 通过发送命令，检测各个redis服务的运行状态，包括主服务器与从服务器。
+2. 当哨兵检测到master节点宕机了，会自动选择一个slave节点切换为master节点，让后通过**发布订阅**告知其他服务器，修改配置文件，让让他们切换master。
+
+然而一个哨兵进程同样也会面对宕机问题，如果只有一个哨兵，那么当这个哨兵宕机后，redis集群就无法实现master节点的自动切换了。为此，我们可以配置多个哨兵进行监控，各个哨兵之间还会相互进行监控，这样就形成了多哨兵模式。
+
+![多哨兵模式](./img/15.png)
+
+假设主服务器宕机，哨兵1先检测到这个结果，系统并不会马上进行failover(故障转移)，仅仅是哨兵1主观的认为master服务器不可用，这个现象称之为主观下线，当后面的哨兵也检测到这个服务不可用并且达到一定数量后，那么哨兵之间就会进行一次投票，投票的结果由一个哨兵发起，进行failover（故障转移）操作。切换成功后，就会通过发布订阅让各个哨兵把自己监控的slave服务器实现切换主机，这个过程称为客观显现。
+
+##### 配置哨兵（sentinel)
+
+1、配置哨兵配置文件sentinel.conf
+
+````shell
+#sentinel monitor master_name  监控master ip 监控master端口  哨兵的权重
+sentinel monitor  sentinel1 127.0.0.1 6379 1
+````
+
+2、启动哨兵
+
+````shell
+[root@localhost bin]# redis-sentinel sentinelconf/sentinel1.conf 
+39119:X 14 Nov 2020 05:49:28.366 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+39119:X 14 Nov 2020 05:49:28.366 # Redis version=6.0.8, bits=64, commit=00000000, modified=0, pid=39119, just started
+39119:X 14 Nov 2020 05:49:28.366 # Configuration loaded
+39119:X 14 Nov 2020 05:49:28.367 * Increased maximum number of open files to 10032 (it was originally set to 1024).
+                _._                                                  
+           _.-``__ ''-._                                             
+      _.-``    `.  `_.  ''-._           Redis 6.0.8 (00000000/0) 64 bit
+  .-`` .-```.  ```\/    _.,_ ''-._                                   
+ (    '      ,       .-`  | `,    )     Running in sentinel mode
+ |`-._`-...-` __...-.``-._|'` _.-'|     Port: 26379
+ |    `-._   `._    /     _.-'    |     PID: 39119
+  `-._    `-._  `-./  _.-'    _.-'                                   
+ |`-._`-._    `-.__.-'    _.-'_.-'|                                  
+ |    `-._`-._        _.-'_.-'    |           http://redis.io        
+  `-._    `-._`-.__.-'_.-'    _.-'                                   
+ |`-._`-._    `-.__.-'    _.-'_.-'|                                  
+ |    `-._`-._        _.-'_.-'    |                                  
+  `-._    `-._`-.__.-'_.-'    _.-'                                   
+      `-._    `-.__.-'    _.-'                                       
+          `-._        _.-'                                           
+              `-.__.-'                                               
+
+39119:X 14 Nov 2020 05:49:28.367 # WARNING: The TCP backlog setting of 511 cannot be enforced because /proc/sys/net/core/somaxconn is set to the lower value of 128.
+39119:X 14 Nov 2020 05:49:28.368 # Sentinel ID is c17521cafbb0283565556e18d03fd6beec468fd8
+39119:X 14 Nov 2020 05:49:28.368 # +monitor master sentinel1 127.0.0.1 6379 quorum 1
+39119:X 14 Nov 2020 05:49:28.369 * +slave slave [::1]:6380 ::1 6380 @ sentinel1 127.0.0.1 6379
+39119:X 14 Nov 2020 05:49:28.370 * +slave slave [::1]:6381 ::1 6381 @ sentinel1 127.0.0.1 6379
+````
+
+3、停掉master服务
+
+````shell
+39119:X 14 Nov 2020 05:52:25.172 # +try-failover master sentinel1 127.0.0.1 6379
+39119:X 14 Nov 2020 05:52:25.173 # +vote-for-leader c17521cafbb0283565556e18d03fd6beec468fd8 1
+39119:X 14 Nov 2020 05:52:25.173 # +elected-leader master sentinel1 127.0.0.1 6379
+39119:X 14 Nov 2020 05:52:25.173 # +failover-state-select-slave master sentinel1 127.0.0.1 6379
+39119:X 14 Nov 2020 05:52:25.231 # +selected-slave slave [::1]:6380 ::1 6380 @ sentinel1 127.0.0.1 6379
+39119:X 14 Nov 2020 05:52:25.231 * +failover-state-send-slaveof-noone slave [::1]:6380 ::1 6380 @ sentinel1 127.0.0.1 6379 #发现master服务宕掉了
+39119:X 14 Nov 2020 05:52:25.331 * +failover-state-wait-promotion slave [::1]:6380 ::1 6380 @ sentinel1 127.0.0.1 6379
+39119:X 14 Nov 2020 05:52:25.772 # +promoted-slave slave [::1]:6380 ::1 6380 @ sentinel1 127.0.0.1 6379
+39119:X 14 Nov 2020 05:52:25.772 # +failover-state-reconf-slaves master sentinel1 127.0.0.1 6379
+39119:X 14 Nov 2020 05:52:25.837 * +slave-reconf-sent slave [::1]:6381 ::1 6381 @ sentinel1 127.0.0.1 6379
+39119:X 14 Nov 2020 05:52:26.801 * +slave-reconf-inprog slave [::1]:6381 ::1 6381 @ sentinel1 127.0.0.1 6379
+39119:X 14 Nov 2020 05:52:26.801 * +slave-reconf-done slave [::1]:6381 ::1 6381 @ sentinel1 127.0.0.1 6379
+39119:X 14 Nov 2020 05:52:26.879 # +failover-end master sentinel1 127.0.0.1 6379
+39119:X 14 Nov 2020 05:52:26.879 # +switch-master sentinel1 127.0.0.1 6379 ::1 6380
+39119:X 14 Nov 2020 05:52:26.879 * +slave slave [::1]:6381 ::1 6381 @ sentinel1 ::1 6380
+39119:X 14 Nov 2020 05:52:26.879 * +slave slave 127.0.0.1:6379 127.0.0.1 6379 @ sentinel1 ::1 6380 #重新选举出新的master
+39119:X 14 Nov 2020 05:52:56.943 # +sdown slave 127.0.0.1:6379 127.0.0.1 6379 @ sentinel1 ::1 6380
+````
+
+如果原master回来了，只能归入slave序列
+
+##### 哨兵模式配置文件详解
+
+````shell
+# Example sentinel.conf
+ 
+# 哨兵sentinel实例运行的端口 默认26379
+port 26379
+ 
+# 哨兵sentinel的工作目录
+dir /tmp
+ 
+# 哨兵sentinel监控的redis主节点的 ip port 
+# master-name  可以自己命名的主节点名字 只能由字母A-z、数字0-9 、这三个字符".-_"组成。
+# quorum 当这些quorum个数sentinel哨兵认为master主节点失联 那么这时 客观上认为主节点失联了
+# sentinel monitor <master-name> <ip> <redis-port> <quorum>
+  sentinel monitor mymaster 127.0.0.1 6379 2
+ 
+# 当在Redis实例中开启了requirepass foobared 授权密码 这样所有连接Redis实例的客户端都要提供密码
+# 设置哨兵sentinel 连接主从的密码 注意必须为主从设置一样的验证密码
+# sentinel auth-pass <master-name> <password>
+sentinel auth-pass mymaster MySUPER--secret-0123passw0rd
+ 
+ 
+# 指定多少毫秒之后 主节点没有应答哨兵sentinel 此时 哨兵主观上认为主节点下线 默认30秒
+# sentinel down-after-milliseconds <master-name> <milliseconds>
+sentinel down-after-milliseconds mymaster 30000
+ 
+# 这个配置项指定了在发生failover主备切换时最多可以有多少个slave同时对新的master进行 同步，
+这个数字越小，完成failover所需的时间就越长，
+但是如果这个数字越大，就意味着越 多的slave因为replication而不可用。
+可以通过将这个值设为 1 来保证每次只有一个slave 处于不能处理命令请求的状态。
+# sentinel parallel-syncs <master-name> <numslaves>
+sentinel parallel-syncs mymaster 1
+ 
+ 
+ 
+# 故障转移的超时时间 failover-timeout 可以用在以下这些方面： 
+#1. 同一个sentinel对同一个master两次failover之间的间隔时间。
+#2. 当一个slave从一个错误的master那里同步数据开始计算时间。直到slave被纠正为向正确的master那里同步数据时。
+#3.当想要取消一个正在进行的failover所需要的时间。  
+#4.当进行failover时，配置所有slaves指向新的master所需的最大时间。不过，即使过了这个超时，slaves依然会被正确配置为指向master，但是就不按parallel-syncs所配置的规则来了
+# 默认三分钟
+# sentinel failover-timeout <master-name> <milliseconds>
+sentinel failover-timeout mymaster 180000
+ 
+# SCRIPTS EXECUTION
+ 
+#配置当某一事件发生时所需要执行的脚本，可以通过脚本来通知管理员，例如当系统运行不正常时发邮件通知相关人员。
+#对于脚本的运行结果有以下规则：
+#若脚本执行后返回1，那么该脚本稍后将会被再次执行，重复次数目前默认为10
+#若脚本执行后返回2，或者比2更高的一个返回值，脚本将不会重复执行。
+#如果脚本在执行过程中由于收到系统中断信号被终止了，则同返回值为1时的行为相同。
+#一个脚本的最大执行时间为60s，如果超过这个时间，脚本将会被一个SIGKILL信号终止，之后重新执行。
+ 
+#通知型脚本:当sentinel有任何警告级别的事件发生时（比如说redis实例的主观失效和客观失效等等），将会去调用这个脚本，
+这时这个脚本应该通过邮件，SMS等方式去通知系统管理员关于系统不正常运行的信息。调用该脚本时，将传给脚本两个参数，
+一个是事件的类型，
+一个是事件的描述。
+如果sentinel.conf配置文件中配置了这个脚本路径，那么必须保证这个脚本存在于这个路径，并且是可执行的，否则sentinel无法正常启动成功。
+#通知脚本
+# sentinel notification-script <master-name> <script-path>
+  sentinel notification-script mymaster /var/redis/notify.sh
+ 
+# 客户端重新配置主节点参数脚本
+# 当一个master由于failover而发生改变时，这个脚本将会被调用，通知相关的客户端关于master地址已经发生改变的信息。
+# 以下参数将会在调用脚本时传给脚本:
+# <master-name> <role> <state> <from-ip> <from-port> <to-ip> <to-port>
+# 目前<state>总是“failover”,
+# <role>是“leader”或者“observer”中的一个。 
+# 参数 from-ip, from-port, to-ip, to-port是用来和旧的master和新的master(即旧的slave)通信的
+# 这个脚本应该是通用的，能被多次调用，不是针对性的。
+# sentinel client-reconfig-script <master-name> <script-path>
+ sentinel client-reconfig-script mymaster /var/redis/reconfig.sh
+````
+
