@@ -1,45 +1,8 @@
-### 3V与3高
-
-大数据时代的3V，主要的问题：
-
-1. 海量Volume
-2. 多样Variety
-3. 实时Velocity
-
-大数据的3高，主要对程序的要求：
-
-1. 高并发
-2. 扩展性
-3.  高性能
-
-### NOSQL的四大分类
-
-#### KV键值对
-
-* 新浪：redis
-* 美团：redis + Tair
-* 阿里、百度：Redis + Memecache
-
-**文档型数据库(bson)**
-
-* MongoDB:是一个基于分布式文件存储的数据库，c++编写，主要处理大量的文档。
-
-### 列存储数据库
-
-* HBase
-* 分布式文件系统
-
-### 图关系型数据库
-
-* Neo4J,InfoGrid;
-
-
-
-### Redis入门
+# Redis入门
 
 > Redis(Remote Dirctory Server)
 
-#### Redis安装
+## Redis安装
 
 1. [下载](https://redis.io/)Redis的安装包，将安装包上传至/home/softwore目录
 
@@ -111,9 +74,9 @@
 
    
 
-### 安装遇到的问题
+## 安装遇到的问题
 
-#### Redis6安装遇到的问题
+### Redis6安装遇到的问题
 
 这里安装redis的时候会可能会出现下面的问题
 
@@ -151,7 +114,7 @@ echo "source /opt/rh/devtoolset-9/enable" >>/etc/profile
 
 
 
-### 性能测试
+## 性能测试
 
 redis-benchmark是一个压力测试工具！
 
@@ -181,52 +144,52 @@ redis-benchmark  -h localhost  -p 6379 -c 100 -n 1000000
 
 
 
-### Redis尝试
+## Redis基本命令
 
-#### 切换数据库
+### 切换数据库
 
 ````shell
 select 3
 ````
 
-#### 查看数据库大小
+### 查看数据库大小
 
 ````shell
 DBSIZE
 ````
 
-#### 查看数据库所有的key
+### 查看数据库所有的key
 
 ````shell
 keys *
 ````
 
-#### 清空当前库
+### 清空当前库
 
 ````
 flushdb
 ````
 
-#### 清空全部数据库
+### 清空全部数据库
 
 ````shell
 flushall
 ````
 
-#### 判断key是否存在
+### 判断key是否存在
 
 ````shell
 EXISTS KEYS
 ````
 
-#### 移动Key到别的数据库
+### 移动Key到别的数据库
 
 ````shell
 move  key  database
 move  name  1
 ````
 
-#### 给key设置过期时间
+### 给key设置过期时间
 
 ````shell
 EXPIRE key  second
@@ -234,7 +197,7 @@ EXPIRE key  second
 EXPIRE name 10
 ````
 
-#### 查看key的type类型
+### 查看key的type类型
 
 ````shell
 127.0.0.1:6379> type name
@@ -243,11 +206,11 @@ string
 
 
 
-#### Redis是单线程的
+### Redis是单线程的
 
 Redis是很快的，Redis是基于内存操作的，CPU不是Redis性能瓶颈，Redis的瓶颈是根据机器的内存和网络带宽，既然可以使用单线程来实现，那就使用单线程了！不过Redis 6之后就是多线程了。
 
-#### Redis为什么单线程还这么快？
+### Redis为什么单线程还这么快？
 
 以前一直有个误区，以为：高性能服务器 一定是 多线程来实现的
 
@@ -299,13 +262,13 @@ Linux 上 taskset 可以将某个进程绑定到一个特定的CPU。你比操�
 
 
 
-### 五大数据类型
+## 五大数据类型
 
 Redis是一种开放源代码（BSD许可）的内存中数据结构存储，用作数据库，缓存和消息代理。它支持数据结构，例如字符串，哈希，列表，集合，带范围查询的排序集合，位图，超日志，带有半径查询和流的地理空间索引。Redis具有内置的复制，Lua脚本，LRU驱逐，事务和不同级别的磁盘持久性，并通过Redis Sentinel和Redis Cluster自动分区提供高可用性。
 
-#### String（字符串）
+### String（字符串）
 
-##### 普通字符串操作
+#### 普通字符串操作
 
 ````shell
 
@@ -321,14 +284,14 @@ OK
 "wuheng nihao"
 ````
 
-##### 删除key
+#### 删除key
 
 ````shell
 127.0.0.1:6379> del name
 (integer) 1
 ````
 
-##### 数字的自增
+#### 数字的自增
 
 ````shell
 127.0.0.1:6379> set number 10
@@ -347,7 +310,7 @@ string
 "19"
 ````
 
-##### 字符串截取
+#### 字符串截取
 
 ````shell
 #截取0到3
@@ -358,7 +321,7 @@ string
 "wuheng nihao"
 ````
 
-##### 字符串的替换
+#### 字符串的替换
 
 ````shell
 # 替换指定位置开始的字符串
@@ -368,7 +331,7 @@ string
 "wurunqiuihao"
 ````
 
-##### 创建key并设置过期时间(存在就覆盖)
+#### 创建key并设置过期时间(存在就覆盖)
 
 ````shell
 127.0.0.1:6379> setex age 10 100
@@ -379,7 +342,7 @@ OK
 (nil)
 ````
 
-##### 创建key(不存在则创建，存在则创建失败)
+#### 创建key(不存在则创建，存在则创建失败)
 
 > 该操作可用于分布式锁中
 
@@ -390,7 +353,7 @@ OK
 (integer) 0
 ````
 
-##### 多个值设置操作
+#### 多个值设置操作
 
 ````shell
 127.0.0.1:6379> mset k1 v1 k2 v2 k3 v3 k4 v4
@@ -403,7 +366,7 @@ OK
 "v3"
 ````
 
-##### 获取多个key值操作
+#### 获取多个key值操作
 
 ````shell
 127.0.0.1:6379> mget k1 k2 k3
@@ -412,7 +375,7 @@ OK
 3) "v3"
 ````
 
-##### 组合命令getset
+#### 组合命令getset
 
 ````shell
 127.0.0.1:6379> getset aolige  100
@@ -423,9 +386,9 @@ OK
 
 
 
-#### List(双向链表)
+### List(双向链表)
 
-##### Lpush 添加数据
+#### Lpush 添加数据
 
 ````shell
 127.0.0.1:6379> lpush  list one
@@ -438,16 +401,14 @@ OK
 (1.66s)
 ````
 
-##### Llen查询链表长度
+#### Llen查询链表长度
 
 ````shell
 127.0.0.1:6379> llen list
 (integer) 4
 ````
 
-
-
-##### Lrange范围查询
+#### Lrange范围查询
 
 ````shell
 #从下面可以看出 list 的lpush操作是将数据按照入栈的顺序添加的
@@ -460,7 +421,7 @@ OK
 2) "two"
 ````
 
-##### Rpush从右端添加值
+#### Rpush从右端添加值
 
 再list的另一端插入数据，这里的另一端是相较于Lpush命令的
 
@@ -474,7 +435,7 @@ OK
 4) "right"
 ````
 
-##### Lpop 从list的首端移除值
+#### Lpop 从list的首端移除值
 
 ````shell
 127.0.0.1:6379> lpop list
@@ -482,14 +443,14 @@ OK
 127.0.0.1:6379>
 ````
 
-##### Rpop从list的未端移除值
+#### Rpop从list的未端移除值
 
 ````shell
 127.0.0.1:6379> rpop list
 "right"
 ````
 
-##### Lindex获取list指定下标的数据
+#### Lindex获取list指定下标的数据
 
 ````shell
 127.0.0.1:6379> lrange list 0 -1
@@ -499,7 +460,7 @@ OK
 "one"
 ````
 
-##### Lrem移除值
+#### Lrem移除值
 
 ````shell
 127.0.0.1:6379> lpush list one
@@ -516,7 +477,7 @@ OK
 5) "one"
 ````
 
-##### Ltrim对原列表进行修剪(截断)
+#### Ltrim对原列表进行修剪(截断)
 
 ````shell
 127.0.0.1:6379> lpush list k1
@@ -541,7 +502,7 @@ OK
 3) "k2"
 ````
 
-##### 组合命令RpopLpush
+#### 组合命令RpopLpush
 
 将list的最右端数据插入newlist的最左端
 
@@ -558,7 +519,7 @@ OK
 1) "k2"
 ````
 
-##### Lset 对list指定下标设置值
+#### Lset 对list指定下标设置值
 
 ````she
 127.0.0.1:6379> lrange list 0 -1
@@ -571,7 +532,7 @@ OK
 2) "k3"
 ````
 
-##### Linsert 在指定值的前后插入数据
+#### Linsert 在指定值的前后插入数据
 
 ````sh
 #在指定值前插入数据
@@ -600,9 +561,9 @@ OK
 
 
 
-#### Set(无序不重复集合)
+### Set(无序不重复集合)
 
-##### Sadd 添加元素
+#### Sadd 添加元素
 
 ````shell
 127.0.0.1:6379> Sadd myset hello
@@ -611,7 +572,7 @@ OK
 (integer) 1
 ````
 
-##### Sismember 
+#### Sismember 
 
 ````shell
 127.0.0.1:6379> sismember myset "hello"
@@ -621,7 +582,7 @@ OK
 
 
 
-##### Smembers获取某个key的所有数据
+#### Smembers获取某个key的所有数据
 
 ````shell
 127.0.0.1:6379> smembers test
@@ -631,21 +592,21 @@ OK
 4) "4
 ````
 
-##### Scard查询set的元素个数
+#### Scard查询set的元素个数
 
 ````shell
 127.0.0.1:6379> Scard myset
 (integer) 2
 ````
 
-##### Srem从set中移除元素
+#### Srem从set中移除元素
 
 ````shell
 127.0.0.1:6379> Srem myset hello
 (integer) 1
 ````
 
-##### Srandmember随机获取set中的元素
+#### Srandmember随机获取set中的元素
 
 ````shell
 127.0.0.1:6379> Sadd myset hello
@@ -664,7 +625,7 @@ OK
 "meximexi"
 ````
 
-##### Spop随机移除元素
+#### Spop随机移除元素
 
 ````shell
 127.0.0.1:6379> spop myset
@@ -673,7 +634,7 @@ OK
 "world"
 ````
 
-##### Smove移动元素到另一个set中
+#### Smove移动元素到另一个set中
 
 ````shell
 127.0.0.1:6379> sadd myset2 lalala
@@ -686,7 +647,7 @@ OK
 3) "aoligei"
 ````
 
-##### Sdiff求多个集合的差集
+#### Sdiff求多个集合的差集
 
 ````shell
 127.0.0.1:6379> Sdiff myset myset2
@@ -697,7 +658,7 @@ OK
 3) "aoligei"
 ````
 
-##### Sinter求多个集合交集
+#### Sinter求多个集合交集
 
 ````shell
 127.0.0.1:6379> Srandmember myset 4
@@ -710,7 +671,7 @@ OK
 1) "hello"
 ````
 
-##### Sunion求多个集合并集
+#### Sunion求多个集合并集
 
 ````shell
 127.0.0.1:6379> Srandmember myset 4
@@ -725,9 +686,9 @@ OK
 3) "hello"
 ````
 
-#### Hash(hash，key-value)
+### Hash(hash，key-value)
 
-##### Hset添加元素
+#### Hset添加元素
 
 ````
 # hset hashkey field  value
@@ -735,7 +696,7 @@ OK
 (integer) 1
 ````
 
-##### Hget获取元素
+#### Hget获取元素
 
 ````shell
 # hget hashkey field
@@ -743,7 +704,7 @@ OK
 "hw"
 ````
 
-##### Hmset 添加多个元素
+#### Hmset 添加多个元素
 
 ````shell
 # hmset hashkey [field value]+
@@ -751,7 +712,7 @@ OK
 OK
 ````
 
-##### Hmget获取多个元素
+#### Hmget获取多个元素
 
 ````shell
 #hmset hashkey [field]+
@@ -761,7 +722,7 @@ OK
 3) "hw3"
 ````
 
-##### Hgetall获取全部的数据
+#### Hgetall获取全部的数据
 
 ````shell
 #hgetall hashkey
@@ -774,7 +735,7 @@ OK
 6) "hw3"
 ````
 
-##### Hdel删除指定的field
+#### Hdel删除指定的field
 
 ````shell
 127.0.0.1:6379> hdel myhash key1
@@ -786,14 +747,14 @@ OK
 4) "hw3
 ````
 
-##### Hlen获取key的长度
+#### Hlen获取key的长度
 
 ````shell
 127.0.0.1:6379> hlen myhash
 (integer) 2
 ````
 
-##### Hexist判断field是否存在
+#### Hexist判断field是否存在
 
 ````shell
 #判断hash里的field是否存在
@@ -808,7 +769,7 @@ OK
 (integer) 0
 ````
 
-##### Hkeys获取某个key的所有field
+#### Hkeys获取某个key的所有field
 
 ````shell
 127.0.0.1:6379> Hkeys myhash
@@ -816,7 +777,7 @@ OK
 2) "key3"
 ````
 
-##### Hvals获取某个key的所有的value
+#### Hvals获取某个key的所有的value
 
 ````shell
 127.0.0.1:6379> Hvals myhash
@@ -824,7 +785,7 @@ OK
 2) "hw3"
 ````
 
-##### Hincrby给某个field做加法
+#### Hincrby给某个field做加法
 
 ````shell
 #Hincrby key field addNuber
@@ -846,7 +807,7 @@ OK
 6) "3"
 ````
 
-##### Hsetnx如果不存在field则可以设置
+#### Hsetnx如果不存在field则可以设置
 
 ````shell
 #Hsetnx key field value
@@ -874,9 +835,9 @@ OK
 8) "10"
 ````
 
-#### Zset（有序集合)
+### Zset（有序集合)
 
-##### Zadd 添加值
+#### Zadd 添加值
 
 ````shell
 #zadd key score value
@@ -892,7 +853,7 @@ OK
 3) "zhangsan"
 ````
 
-##### zrange获取某个key的所有信息
+#### zrange获取某个key的所有信息
 
 ````shell
 127.0.0.1:6379> zrange salary 0 -1
@@ -901,7 +862,7 @@ OK
 3) "zhangsan"
 ````
 
-##### Zrangebyscore升序排序
+#### Zrangebyscore升序排序
 
 ````shell
 #zrangebyscore key min max [WITHSCORES] [LIMIT offset count]
@@ -924,7 +885,7 @@ OK
 6) "3000"
 ````
 
-##### Zrevrangebyscore降序排序
+#### Zrevrangebyscore降序排序
 
 ````shell
 #Zrevrangebyscore salary max min [WITHSCORES] [LIMIT offset count]
@@ -934,7 +895,7 @@ OK
 3) "wangwu"
 ````
 
-##### Zrmv删除元素
+#### Zrmv删除元素
 
 ````shell
 #  Zrem key member [member ...]
@@ -945,7 +906,7 @@ OK
 2) "wangwu"
 ````
 
-##### Zcard统计Zset里的元素个数
+#### Zcard统计Zset里的元素个数
 
 ````shell
  #zcard key
@@ -953,7 +914,7 @@ OK
 (integer) 2
 ````
 
-#####  Zcount统计指定区间的元素数量
+####  Zcount统计指定区间的元素数量
 
 ````shell
 #Zcount key min max
@@ -970,9 +931,9 @@ OK
 
 
 
-#### Geospatial地理位置
+## Geospatial地理位置
 
-##### Geoadd添加地理位置
+#### Geoadd添加地理位置
 
 经度（longitude）必须放在纬度（latitude）之前，对于可被索引的坐标位置是有一定限制条件的：非常靠近极点的位置是不能被索引的，
 
@@ -985,7 +946,7 @@ OK
 (integer) 2
 ````
 
-##### Zrange获取某个key的所有的位置信息
+#### Zrange获取某个key的所有的位置信息
 
 ````shell
 127.0.0.1:6379> Zrange cities 0 -1 withscores
@@ -995,7 +956,7 @@ OK
 4) "4069885555377153"
 ````
 
-##### Geodist返回一个key中指定两个位置的距离
+#### Geodist返回一个key中指定两个位置的距离
 
 ````shell
 #Geodist key member1 member2 [m|km|ft|mi]
@@ -1003,7 +964,7 @@ OK
 "1068.5682"
 ````
 
-##### Geohash返回一个或多个位置的经纬度信息
+#### Geohash返回一个或多个位置的经纬度信息
 
 ````shell
 Geohash key member [member ...]
@@ -1011,7 +972,7 @@ Geohash key member [member ...]
 1) "wx4g0f7n800"
 ````
 
-#####  Geopos返回一个或多个位置的经纬度信息
+####  Geopos返回一个或多个位置的经纬度信息
 
 ````shell
 #Geopos key member [member ...]
@@ -1020,7 +981,7 @@ Geohash key member [member ...]
    2) "39.91581928642635546"
 ````
 
-##### Georadius以给定位置为中心，半径不超过给定半径的附近所有位置
+#### Georadius以给定位置为中心，半径不超过给定半径的附近所有位置
 
 ````shell
 #Georadius key longitude latitude radius m|km|ft|mi [WITHCOORD] [WITHDIST] [WITHHASH] [COUNT count] [ASC|DESC] [STORE key] [STORED]
@@ -1028,7 +989,7 @@ Geohash key member [member ...]
 1) "shanghai"
 ````
 
-##### Georadiusbymember指定已添加的某个位置作为中心,半径不超过给定半径的附近所有位置
+#### Georadiusbymember指定已添加的某个位置作为中心,半径不超过给定半径的附近所有位置
 
 ````shell
 GEORADIUSBYMEMBER key member radius m|km|ft|mi [WITHCOORD] [WITHDIST] [WITHHASH] [COUNT count] [ASC|DESC] [STORE key] [STOREDIST
@@ -1037,9 +998,9 @@ GEORADIUSBYMEMBER key member radius m|km|ft|mi [WITHCOORD] [WITHDIST] [WITHHASH]
 2) "beijing"
 ````
 
-#### Hyperloglog
+## Hyperloglog
 
-##### 简介
+### 简介
 
 Redis HyperLogLog 是用来做基数统计的算法，HyperLogLog 的优点是，在输入元素的数量或者体积非常非常大时，计算基数所需的空间总是固定 的、并且是很小的。
 
@@ -1047,11 +1008,11 @@ Redis HyperLogLog 是用来做基数统计的算法，HyperLogLog 的优点是�
 
 但是，因为 HyperLogLog 只会根据输入元素来计算基数，而不会储存输入元素本身，所以 HyperLogLog 不能像集合那样，返回输入的各个元素。
 
-##### 什么是基数
+### 什么是基数
 
 比如数据集 {1, 3, 5, 7, 5, 7, 8}， 那么这个数据集的基数集为 {1, 3, 5 ,7, 8}, 基数(不重复元素)为5。 基数估计就是在误差可接受的范围内，快速计算基数。
 
-##### 基数的应用实例
+#### 基数的应用实例
 
 下面通过一个实例说明基数在电商数据分析中的应用。
 
@@ -1075,9 +1036,9 @@ Redis HyperLogLog 是用来做基数统计的算法，HyperLogLog 的优点是�
 
 **实时UV计算**
 
-#### BigMap（位图）
+## BigMap（位图）
 
-##### setbit添加
+### setbit添加
 
 ````shell
 #setbit key offset value
@@ -1085,14 +1046,14 @@ Redis HyperLogLog 是用来做基数统计的算法，HyperLogLog 的优点是�
 (integer) 
 ````
 
-##### Getbit获取
+### Getbit获取
 
 ````shell
 127.0.0.1:6379> getbit sign 1
 (integer) 1
 ````
 
-##### Bitcount(统计)
+### Bitcount(统计)
 
 ````shell
 # bitcount key [start end]
@@ -1108,13 +1069,13 @@ Redis HyperLogLog 是用来做基数统计的算法，HyperLogLog 的优点是�
 (integer) 1
 ````
 
-#### Redis基本的事务操作
+## Redis基本的事务操作
 
 redis保证命令的原子性，但是redis事务不保证的原子性
 
 redis没有隔离级别的概念
 
-##### Redis的三个阶段
+### Redis的三个阶段
 
 * 开启事务(multi)
 
@@ -1140,7 +1101,7 @@ QUEUED
 4) OK
 ````
 
-##### (discard)放弃事务
+### (discard)放弃事务
 
 ````shell
 127.0.0.1:6379> multi
@@ -1159,27 +1120,19 @@ OK
 (nil)
 ````
 
-##### 注意事项
+### 注意事项
 
 在redis事务执行过程中，如果事务中的其中一个命令有语法错误，在事务执行时，其他的命令也会照常执行。
 
-
-
-#### 悲观锁
-
-> 认为，什么时候都会出问题，无论做什么都需要加锁
-
-
-
-#### （watch)乐观锁
+## watch乐观锁
 
 一般watch命令与事务是一起使用的，WATCH命令可以监控一个或多个键，一旦其中有一个键被修改（或删除），之后的事务就不会执行。监控一直持续到EXEC命令（事务中的命令是在EXEC之后才执行的，所以在MULTI命令后可以修改WATCH监控的键值）
 
 
 
-#### Jedis
+## Jedis
 
-##### 导入pom
+### 导入pom
 
 ````xml
         <!-- https://mvnrepository.com/artifact/redis.clients/jedis -->
@@ -1192,9 +1145,9 @@ OK
 
 然后reids的java客户端的api跟上文所描述的api一一对应。
 
-#### SpringBoot整合Redis
+## SpringBoot整合Redis
 
-##### 导入pom
+### 导入pom
 
 ````xml
 <dependency>
@@ -1208,7 +1161,7 @@ OK
         </dependency>
 ````
 
-##### 说明
+### 说明
 
 在SpringBoot2.x之后，jeids被替换为了lettuce。
 
@@ -1216,7 +1169,7 @@ jedis：采用直连，多个线程操作的话，是不安全的，如果想要
 
 lettuce：采用netty，示例可以再多个线程中进行共享，不存在线程不安全的情况！可以减少线程数量。
 
-##### 使用
+### 使用
 
 ````java
 //set普通的set key value操作
@@ -1237,7 +1190,7 @@ lettuce：采用netty，示例可以再多个线程中进行共享，不存在�
         redisTemplate.opsForValue().setBit()
 ````
 
-##### 自定义RedisTemplate
+### 自定义RedisTemplate
 
 ```java
 @Configuration
@@ -1274,9 +1227,9 @@ public class RedisConfig {
 }
 ```
 
-#### Redis.conf
+## Redis.conf
 
-##### 单位
+### 单位
 
 redis中的单位有1k,1kb,1m,1mb,1g,1gb
 
@@ -1294,7 +1247,7 @@ redis中的单位有1k,1kb,1m,1mb,1g,1gb
 # units are case insensitive so 1GB 1Gb 1gB are all the same.
 ````
 
-#####  inclue 包含其他文件
+###  inclue 包含其他文件
 
 可以将其他配置文件组合一起，共同形成redis的配置文件
 
@@ -1319,7 +1272,7 @@ redis中的单位有1k,1kb,1m,1mb,1g,1gb
 
 ````
 
-##### 保护模式protected-mode
+### 保护模式protected-mode
 
 ````shell
 #默认情况下启用保护模式。 仅当您确定您希望其他主机的客户端连接到Redis时，即使未配置身份验证，也不会使用“ bind”指令显式列出一组特定的接口，才应禁用它。
@@ -1328,7 +1281,7 @@ protected-mode yes
 
 
 
-##### bind 绑定ip
+### bind 绑定ip
 
 ````shell
 默认情况下，如果未指定“ bind”配置指令，则Redis会侦听服务器上所有可用网络接口的连接。可以使用“ bind”配置指令侦听一个或多个选定接口，然后侦听一个 或更多IP地址。
@@ -1338,20 +1291,20 @@ bind 192.168.1.100 10.0.0.1
 bind 127.0.0.1 ::1
 ````
 
-##### port设置端口
+### port设置端口
 
 ````
 redis服务的端口设置
 ````
 
-##### daemonize守护进程方式运行（后台运行）
+### daemonize守护进程方式运行（后台运行）
 
 ````she
 By default Redis does not run as a daemon. Use 'yes' if you need it.
 Note that Redis will write a pid file in /var/run/redis.pid when daemonized.
 ````
 
-##### pidfile进程文件
+### pidfile进程文件
 
 ````shell
 如果指定了pid文件，则Redis会在启动时将其写入指定位置并在退出时将其删除。
@@ -1361,7 +1314,7 @@ Note that Redis will write a pid file in /var/run/redis.pid when daemonized.
 redis会尽力创建pid文件：如果Redis无法创建它不会发生任何不良情况，服务器将启动并正常运行。
 ````
 
-##### loglevel设置日志等级
+### loglevel设置日志等级
 
 ````
 # debug (a lot of information, useful for development/testing)
@@ -1371,7 +1324,7 @@ redis会尽力创建pid文件：如果Redis无法创建它不会发生任何不�
 loglevel notice
 ````
 
-##### logfile日志文件名
+### logfile日志文件名
 
 ````
 # Specify the log file name. Also the empty string can be used to force
@@ -1380,7 +1333,7 @@ loglevel notice
 logfile ""
 ````
 
-##### databases默认数据库数量
+### databases默认数据库数量
 
 ````
 # Set the number of databases. The default database is DB 0, you can select
@@ -1388,13 +1341,13 @@ logfile ""
 # dbid is a number between 0 and 'databases'-1
 ````
 
-##### 是否显示log
+### 是否显示log
 
 ````
 always-show-logo yes
 ````
 
-##### save快照
+### save快照
 
 持久化，在规定的时间内，执行了多少次操作，则将数据进行持久化(.rdb,.aof)。
 
@@ -1405,19 +1358,19 @@ save 60 10000      #如果60秒内至少有1w个key改变，则进行持久化
 
 ````
 
-##### stop-writes-on-bgsave-error 持久化出错后是否继续工作
+### stop-writes-on-bgsave-error 持久化出错后是否继续工作
 
 ````
 stop-writes-on-bgsave-error yes
 ````
 
-##### rdbcompression开启rdb文件压缩
+### rdbcompression开启rdb文件压缩
 
 ````shell
 rdbcompression yes
 ````
 
-##### rdbchecksum校验rdb文件
+### rdbchecksum校验rdb文件
 
 保存rdb文件的时候，进行错误校验 
 
@@ -1425,13 +1378,13 @@ rdbcompression yes
 rdbchecksum yes
 ````
 
-##### dbfilename 设置rdb文件名称
+### dbfilename 设置rdb文件名称
 
 ````shell
 dbfilename dump.rdb
 ````
 
-##### requirepass设置redis访问密码
+### requirepass设置redis访问密码
 
 ````shell
 requirepass  123456
@@ -1439,13 +1392,13 @@ requirepass  123456
 config set requirepass "123456"
 ````
 
-##### maxclients设置最大客户端的数量
+### maxclients设置最大客户端的数量
 
 ````shell
 maxclients 10000
 ````
 
-##### maxmemory 设置redis可使用的最大值
+### maxmemory 设置redis可使用的最大值
 
 redis默认不会对内存使用进行限制
 
@@ -1460,7 +1413,7 @@ maxmemory 100M
 maxmemory 1G
 ````
 
-##### maxmemory-policy内存到达上限的策略
+### maxmemory-policy内存到达上限的策略
 
 ````shell
 1、volatile-lru：只对设置了过期时间的key进行LRU（默认值） 
@@ -1473,19 +1426,19 @@ maxmemory 1G
 
 
 
-##### appendonly开启aof模式
+### appendonly开启aof模式
 
 ````shell
 appendonly  no
 ````
 
-##### appendfilename持久化文件的名字
+### appendfilename持久化文件的名字
 
 ````shell
 appendfilename "appendonly.aof"
 ````
 
-##### appendfsync aof同步
+### appendfsync aof同步
 
 ````shell
 appendfsync everysec  #每秒sync
@@ -1495,7 +1448,7 @@ appendfsync no        #不执行sync，操作系统自己同步数据，速度�
 
 
 
-#### RDB(Redis Database)
+## RDB(Redis Database)
 
 Redis是内存数据库，如果不将内存中的数据库状态保存到磁盘，那么服务器进程一旦推出，服务器中的数据也将消失。所有redis提供了持久化的操作。
 
@@ -1503,7 +1456,7 @@ Redis是内存数据库，如果不将内存中的数据库状态保存到磁盘
 
 Redis会单独fork一个子进程来进行持久化，会先将数据写入一个临时文件中，待持久化过程都结束了，在用这个临时文件替换上次持久化好的文件。整个过程中，主进程是不会进行任何IO操作的。这确保了极高的性能。如果需要进行大规模数据的恢复，且对于上一次数据的完整性不是特别敏感，那RDB方式要比AOF方式更高效。RDB的缺点是最后一次持久化后的数据可能丢失。我们默认的就是RDB，一般情况下不需要修改这个配置。
 
-##### 如何恢复RDB文件
+### 如何恢复RDB文件
 
 将RDB文件放在redis的启动目录下
 
@@ -1528,7 +1481,7 @@ Redis会单独fork一个子进程来进行持久化，会先将数据写入一�
 dir ./
 ````
 
-##### RDB的优缺点
+### RDB的优缺点
 
 **优点**
 
@@ -1542,13 +1495,13 @@ dir ./
 
 
 
-#### AOF (Append Only File)
+## AOF (Append Only File)
 
  以日志的形式来记录每个写操作，将Redis执行过的所有写指令记录下来(读操作不记录)，只许追加文件但不可以改写文件，redis启动之初会读取该文件重新构建数据，换言之，redis重启的话就根据日志文件的内容将写指令从前到后执行一次以完成数据的恢复工作。
 
 <img src="./img/9.png" style="zoom:67%;" />
 
-##### 开启aof
+### 开启aof
 
 将appendonly的值设置为yes，则开启了aof,开启了aof后，在redis正常运行期间就不会出发rdb了，但是redis被shutdown后会出发rdb操作，但对aof方式没有任何影响。
 
@@ -1573,7 +1526,7 @@ dir ./
 appendonly yes
 ````
 
-##### AOF文件检测
+### AOF文件检测
 
 如果aof文件有错，或者被破坏了，这个时候redis是启动不起来的，因此我们需要修复这个文件。
 
@@ -1591,7 +1544,7 @@ Successfully truncated AOF
 
 如果文件正常了，这个时候就可以redis-server就能够启动起来了。
 
-##### AOF重写机制(rewrite)
+### AOF重写机制(rewrite)
 
 **重写机制是什么：**
 
@@ -1607,7 +1560,7 @@ Successfully truncated AOF
 
 ​      这里插一句，假如你到一家新公司，老板把公司吹的天花乱坠，什么技术有多牛，业务量有多大。如果他们使用aof来做redis持久化，这时候，你只要偷偷看一眼他们redis的这个配置项auto-aof-rewrite-min-size，如果是64mb，那么你就应该心领神会了——这个公司要么业务量根本没这么大，要么这个公司的人并不怎么牛。真正大型系统，3gb都是起步，64mb根本是在搞笑。这个配置时观察一个公司水平的一个很好的维度。
 
-##### AOF的优缺点
+### AOF的优缺点
 
 **优点**
 
@@ -1620,9 +1573,9 @@ Successfully truncated AOF
 1. aop文件远远大于rdb，因此数据恢复的速度远小于rdb
 2. AOF的运行效率也比rdb慢，因此redis的默认配置是rdb而不是aop
 
-#### 发布订阅
+## 发布订阅
 
-##### 概念讲解
+### 概念讲解
 
 Redis发布订阅（pub/sub)是一种消息通信模式：发布者(pub)发送消息，订阅者（sub)接受消息。
 
@@ -1642,7 +1595,7 @@ Redis 客户端可以订阅任意数量的频道。
 
 ![img](./img/12.png)
 
-##### redis发布订阅的命令
+### redis发布订阅的命令
 
 下表列出了 redis 发布订阅常用命令：
 
@@ -1678,15 +1631,15 @@ Reading messages... (press Ctrl-C to quit)
 127.0.0.1:6379> 
 ````
 
-##### 使用场景
+### 使用场景
 
 1. 消息系统
 2. `实时`聊天（聊天室），之所以是实时系统，是因为当redis客户端下线后，生产的消息会丢失，这个时候就需要用到专业的消息队列了。
 3. 关注系统 
 
-#### Redis主从环境搭建
+## Redis主从环境搭建
 
-##### 主从复制
+### 主从复制
 
 上文都是基于单机版redis讲的，但是在实际的应用场景中，单机版的redis也有着局限性，比如电商网站往往是写一次数据，但有着无数的浏览量，因此实际场景往往会采用redis集群来作为应用的环境。可以从连方面来进行论证。
 
@@ -1710,7 +1663,7 @@ Reading messages... (press Ctrl-C to quit)
 
 
 
-##### 环境搭建
+### 环境搭建
 
 redis的从节点的配置，可以直接在从节点上进行相关的配置，而不用去修改主节点的信息。
 
@@ -1749,7 +1702,7 @@ redis1.conf  redis2.conf  redis3.conf
 
 修改完3个配置文件后，一次启动3个redis服务。
 
-##### 配置主从节点
+### 配置主从节点
 
 > 默认情况下每一个redis服务都是主节点
 
@@ -1809,7 +1762,7 @@ replicaof <masterip> <masterport>
 masterauth <master-password>
 ````
 
-##### 注意点
+### 注意点
 
 在redis的主从架构中，存在一下几个值得关注的特点
 
@@ -1822,9 +1775,9 @@ masterauth <master-password>
 
 
 
-#### 哨兵模式（自动选master)
+## 哨兵模式（自动选master)
 
-##### 概述
+### 概述
 
 主从切换的技术方式是：如果主节点挂掉了吗，就需要人工手动去切换到新的主节点，这样做费事费力，会造成长时间的服务不可用，并且容易出错。因此这种方式，能不采用就不采用。更多的时候，我们应该优先考虑哨兵模式。
 
@@ -1843,7 +1796,7 @@ masterauth <master-password>
 
 假设主服务器宕机，哨兵1先检测到这个结果，系统并不会马上进行failover(故障转移)，仅仅是哨兵1主观的认为master服务器不可用，这个现象称之为主观下线，当后面的哨兵也检测到这个服务不可用并且达到一定数量后，那么哨兵之间就会进行一次投票，投票的结果由一个哨兵发起，进行failover（故障转移）操作。切换成功后，就会通过发布订阅让各个哨兵把自己监控的slave服务器实现切换主机，这个过程称为客观显现。
 
-##### 配置哨兵（sentinel)
+### 配置哨兵（sentinel)
 
 1、配置哨兵配置文件sentinel.conf
 
@@ -1917,7 +1870,7 @@ sentinel monitor  sentinel1 127.0.0.1 6379 1
 
 如果原master回来了，只能归入slave序列
 
-##### 哨兵模式配置文件详解
+### 哨兵模式配置文件详解
 
 ````shell
 # Example sentinel.conf
@@ -1992,9 +1945,9 @@ sentinel failover-timeout mymaster 180000
  sentinel client-reconfig-script mymaster /var/redis/reconfig.sh
 ````
 
-#### Redis 集群搭建
+## Redis 集群搭建
 
-##### 概念
+### 概念
 
 在数据量不大，并发访问数不高的场景中，redis的`主从复制` + `哨兵`的架构就足以应付需求了，但是如果数据量和访问数上去了，之后这样的架构就略显捉襟见肘了，其问题的关键就是`主从复制` + `哨兵`的瓶颈限制是在mater节点负责写入数据并把写入的数据同步到从节点上，如果有一天master节点的存储空间不够用了，那么数据自然就就写不进去了，这个是时候redis集群不就瘫痪了么。为了解决这个问题，可以在`主从复制` + `哨兵`模式上在添加一个`集群`模式解决这个问题。
 
@@ -2007,7 +1960,7 @@ sentinel failover-timeout mymaster 180000
 
 通过这样的结构，redis集群就解决了`主从复制`+`哨兵`的存储限制，可以轻松的通过扩展redis master节点来添加redis集群的存储容量。
 
-##### 配置cluster
+### 配置cluster
 
 在redis5以后取消了ruby脚本redis-trib.rb的支持，并将相关的命令迁移到了redis-cli里面，避免了安装ruby环境。这里本文将以redis-6.0.8版本来演示redis cluster的搭建。
 
@@ -2463,7 +2416,7 @@ redis-cli -a cc --cluster rebalance --cluster-weight 117457eab5071954faab5e81c31
 
 ````
 
-##### cluster相关命令
+### cluster相关命令
 
 ````shell
 redis-cli --cluster help
@@ -2508,15 +2461,15 @@ For check, fix, reshard, del-node, set-timeout you can specify the host and port
 
 
 
-#### Redis缓存穿透
+## Redis缓存穿透
 
-##### 概念
+### 概念
 
 当用户想要查询一个数据的时候，发现在redis中没有找到想要的数据，也就是说没有在redis中命中相应的缓存数据，这个时候请求就直接去数据库查询。发现数据库中也没有数据，这次查询失败。当用户很多的时候，都去查询该数据，因此就会将这些请求直接打在数据库上，使得数据库的压力陡增，这就相当于缓存穿透。
 
 ![缓存穿透](./img/16.jpg)
 
-##### 解决方案
+### 解决方案
 
 **1、布隆过滤器**
 
@@ -2539,15 +2492,15 @@ For check, fix, reshard, del-node, set-timeout you can specify the host and port
 
 
 
-#### Redis缓存击穿
+## Redis缓存击穿
 
-##### 概念
+### 概念
 
 需要注意缓存击穿与缓存穿透是有区别的，缓存击穿是指一个key非常热点，在不停的抗大并发，大量访问请求对集中在一个key上，当这个key瞬间失效，持续的大并发访问就穿破缓存，直接打在数据库，就像一个屏障上被击破了一个点一样。
 
 当某个key在过期的瞬间，有大量的请求并发访问，由于缓存过期，会同时访问数据库来查询数据并且回写到缓存，这样会使数据库的压力瞬间增大。
 
-##### 解决方案
+### 解决方案
 
 **1、设置热点数据永不过期**
 
@@ -2559,15 +2512,15 @@ For check, fix, reshard, del-node, set-timeout you can specify the host and port
 
 ![分布式锁](./img/18.png)
 
-#### 缓存雪崩
+## 缓存雪崩
 
-##### 概念
+### 概念
 
 在高并发的系统中缓存层负载了很大一部分的请求，降低的持久层的压力，如果缓存层由于某些原因停止服务了（扫地大妈把电源不小心弄断了？），那么所有的请求都将直接访问到持久层，由于持久层的处理速度性能远远不及缓存层，就可能导致持久层也会服务不可用，还有一种情况是大量的缓存数据在同一时刻失效了，也可能导致缓存雪崩。
 
 ![缓存雪崩](./img/19.jpg)
 
-##### 解决方案
+### 解决方案
 
 **1、redis高可用**
 
