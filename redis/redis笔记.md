@@ -1,38 +1,3 @@
-### 什么是NoSql
-
-Not only Sql (不仅仅是SQL)，泛指非关系型数据库，随着web2.0，互联网的诞生，传统的关系型数据库很难对付web 2.0时代！尤其是超大规模的高并发的社区！暴露出来很多难以克服的问题。
-
-很多的数据类型，比如个人信息、社交网络、地理位置，这些数据类型的存储不需要一个固定的格式！不需要多余的操作就可以横向操作！
-
-### NOSQL的特点
-
-1. 方便扩展（数据之间没有关系，很好扩展）
-2. 大数据量，高性能。(redis  一秒读8W次，写11W次)
-3. 数据类型的多样性！（不需要事先设计数据库，随去随用！如果是数据量十分大的表，很多人就无法设计了）
-4. 传统的RDBM和NOSQL
-
-   ````shell
-   #传统的RDBMS
-   ````
-- 结构化阻止
-- SQL
-- 数据和关系都存在单独的表中
-- 数据操作/数据定义语言
-- 严格的一致性
-- 基础的事务
-- ......
-
-#NOSQL
-- 不仅仅是数据
-- 没有固定的查询语言
-- 键值对存储，列存储，文旦存储，图形数据库（社交关系）
-- CAP定理和BASE(异地多活！)
-- 高性能，高可用，可扩展
-  
-   ````
-   
-   ````
-
 ### 3V与3高
 
 大数据时代的3V，主要的问题：
@@ -356,6 +321,13 @@ OK
 "wuheng nihao"
 ````
 
+##### 删除key
+
+````shell
+127.0.0.1:6379> del name
+(integer) 1
+````
+
 ##### 数字的自增
 
 ````shell
@@ -638,6 +610,16 @@ OK
 127.0.0.1:6379> Sadd myset world
 (integer) 1
 ````
+
+##### Sismember 
+
+````shell
+127.0.0.1:6379> sismember myset "hello"
+127.0.0.1:6379> Sismember myset hello
+(integer) 1
+````
+
+
 
 ##### Smembers获取某个key的所有数据
 
@@ -1702,7 +1684,7 @@ Reading messages... (press Ctrl-C to quit)
 2. `实时`聊天（聊天室），之所以是实时系统，是因为当redis客户端下线后，生产的消息会丢失，这个时候就需要用到专业的消息队列了。
 3. 关注系统 
 
-#### Redis集群环境搭建
+#### Redis主从环境搭建
 
 ##### 主从复制
 
@@ -2010,6 +1992,522 @@ sentinel failover-timeout mymaster 180000
  sentinel client-reconfig-script mymaster /var/redis/reconfig.sh
 ````
 
+#### Redis 集群搭建
+
+##### 概念
+
+在数据量不大，并发访问数不高的场景中，redis的`主从复制` + `哨兵`的架构就足以应付需求了，但是如果数据量和访问数上去了，之后这样的架构就略显捉襟见肘了，其问题的关键就是`主从复制` + `哨兵`的瓶颈限制是在mater节点负责写入数据并把写入的数据同步到从节点上，如果有一天master节点的存储空间不够用了，那么数据自然就就写不进去了，这个是时候redis集群不就瘫痪了么。为了解决这个问题，可以在`主从复制` + `哨兵`模式上在添加一个`集群`模式解决这个问题。
+
+![集群](./img/20.jpg)
+
+从上图中我们应该可以得出这结论:
+
+1. 整个redis集群存放着完整的数据，但是每个master只存放了部分数据
+2. 每个master（主）都可以有着自己的slave（从）
+
+通过这样的结构，redis集群就解决了`主从复制`+`哨兵`的存储限制，可以轻松的通过扩展redis master节点来添加redis集群的存储容量。
+
+##### 配置cluster
+
+在redis5以后取消了ruby脚本redis-trib.rb的支持，并将相关的命令迁移到了redis-cli里面，避免了安装ruby环境。这里本文将以redis-6.0.8版本来演示redis cluster的搭建。
+
+**集群的增删**
+
+**①：环境配置**
+
+本文演示的redis cluster搭建是在一台虚拟机上进行的，准备启动3个redis实例为3个master，slave的配置将在后文进行添加。
+
+首先准备三个redis配置文件
+
+````shell
+[root@localhost redisconf]# pwd
+/usr/local/bin/redisconf
+[root@localhost redisconf]# ls
+redis1.conf  redis2.conf  redis3.conf
+````
+
+需要注意的是，需要在配置文件中，将集群的配置打开
+
+````shell
+#普通Redis实例不能属于Redis集群； 只有作为群集节点启动的节点可以。 为了将Redis实例作为群集节点启动，请启用群集支持：
+cluster-enabled yes
+#每个群集节点都有一个群集配置文件。 该文件不需要手动创建和编辑。 它由Redis节点创建和更新。每个Redis群集节点都需要一个不同的集群配置文件。请确保在同一系统中运行的实例没有重名的集群配置文件名。
+cluster-config-file nodes-6379.conf
+#当集群几点间在15000毫秒内练习不到对方，就认为对方出现故障。
+cluster-node-timeout 15000
+````
+
+**②：启动redis实例**
+
+````shell
+[root@localhost redisconf]# redis-server  redis1.conf 
+[root@localhost redisconf]# redis-server  redis2.conf 
+[root@localhost redisconf]# redis-server  redis3.conf 
+[root@localhost redisconf]# ps -ef | grep redis
+root       2099      1  0 02:37 ?        00:00:00 redis-server *:6379 [cluster]
+root       2105      1  1 02:37 ?        00:00:00 redis-server *:6380 [cluster]
+root       2111      1  2 02:37 ?        00:00:00 redis-server *:6381 [cluster]
+root       2117   1939  0 02:37 pts/1    00:00:00 grep --color=auto redis
+````
+
+**③：创建集群主节点**
+
+````shell
+[root@localhost redisconf]# redis-cli  --cluster create 192.168.190.128:6379  192.168.190.128:6380  192.168.190.128:6381
+>>> Performing hash slots allocation on 3 nodes...
+Master[0] -> Slots 0 - 5460
+Master[1] -> Slots 5461 - 10922
+Master[2] -> Slots 10923 - 16383
+M: dfab967705b28c0608b7f1d792fd6c5478ba3a3c 192.168.190.128:6379   #192.168.190.128:6379实例的id为dfab967705b28c0608b7f1d792fd6c5478ba3a3c
+   slots:[0-5460] (5461 slots) master   #为192.168.190.128:6379实例分配的slot(0~5460)
+M: 8d44852299791f4a897d8e3717b24c84d9c1519d 192.168.190.128:6380
+   slots:[5461-10922] (5462 slots) master   #为192.168.190.128:6380实例分配的slot(5461~10922)
+M: 90773b35c72b8af04cea8bee376fe5c727f354b7 192.168.190.128:6381
+   slots:[10923-16383] (5461 slots) master  #为192.168.190.128:6379实例分配的slot(10923~16383)
+Can I set the above configuration? (type 'yes' to accept): yes
+>>> Nodes configuration updated
+>>> Assign a different config epoch to each node
+>>> Sending CLUSTER MEET messages to join the cluster
+Waiting for the cluster to join
+.
+>>> Performing Cluster Check (using node 192.168.190.128:6379)
+M: dfab967705b28c0608b7f1d792fd6c5478ba3a3c 192.168.190.128:6379
+   slots:[0-5460] (5461 slots) master
+M: 8d44852299791f4a897d8e3717b24c84d9c1519d 192.168.190.128:6380
+   slots:[5461-10922] (5462 slots) master
+M: 90773b35c72b8af04cea8bee376fe5c727f354b7 192.168.190.128:6381
+   slots:[10923-16383] (5461 slots) master
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+````
+
+> 上面的三个步骤是简单去创建一个redis集群，而且这个集群只有master节点没有slave节点，如果我们想要为集群添加slave节点，可以使用下面两种方式。
+
+**④：创建集群时创建slave节点**
+
+在①中我们准备了3份redis配置文件，不过这三个redis配置是给3个master节点用的，如果我们想给每个master节点都弄一个slave节点，就需要用6个redis配置文件，下面本文将演示创建master集群时也创建slave。
+
+````shell
+[root@localhost redisconf]# pwd
+/usr/local/bin/redisconf
+[root@localhost redisconf]# ls
+redis1.conf  redis1_slave.conf  redis2.conf  redis2_slave.conf  redis3.conf  redis3_slave.conf
+````
+
+启动6个redis实例，然后创建主从集群
+
+````shell
+[root@localhost redisconf]# ps -ef | grep redis
+root       2252      1  0 03:08 ?        00:00:00 redis-server *:6379 [cluster]
+root       2260      1  0 03:08 ?        00:00:00 redis-server *:6479 [cluster]
+root       2266      1  0 03:08 ?        00:00:00 redis-server *:6480 [cluster]
+root       2272      1  0 03:08 ?        00:00:00 redis-server *:6380 [cluster]
+root       2278      1  0 03:08 ?        00:00:00 redis-server *:6381 [cluster]
+root       2284      1  0 03:08 ?        00:00:00 redis-server *:6481 [cluster]
+
+[root@localhost redisconf]#  redis-cli  --cluster create 192.168.190.128:6379  192.168.190.128:6380  192.168.190.128:6381  192.168.190.128:6479  192.168.190.128:6480  192.168.190.128:6481  --cluster-replicas 1
+>>> Performing hash slots allocation on 6 nodes...
+Master[0] -> Slots 0 - 5460
+Master[1] -> Slots 5461 - 10922
+Master[2] -> Slots 10923 - 16383
+Adding replica 192.168.190.128:6480 to 192.168.190.128:6379
+Adding replica 192.168.190.128:6481 to 192.168.190.128:6380
+Adding replica 192.168.190.128:6479 to 192.168.190.128:6381
+>>> Trying to optimize slaves allocation for anti-affinity
+[WARNING] Some slaves are in the same host as their master
+M: 7db868c1cc519d4ecfdb3edf0ab5a000d2c01de1 192.168.190.128:6379
+   slots:[0-5460] (5461 slots) master
+M: ecb6ea2ebb629bff68768127644cd9c9572aa9d6 192.168.190.128:6380
+   slots:[5461-10922] (5462 slots) master
+M: e3f911801c0cfc43192053a8f90a97f3668f7dbf 192.168.190.128:6381
+   slots:[10923-16383] (5461 slots) master
+S: 8171919e5e68918f709fbbb94a56865623f200b4 192.168.190.128:6479
+   replicates e3f911801c0cfc43192053a8f90a97f3668f7dbf
+S: ee3f0e5906414358e2c072b277885556edaaae1b 192.168.190.128:6480
+   replicates 7db868c1cc519d4ecfdb3edf0ab5a000d2c01de1
+S: b05914d3dbd74b12d9fed9295ebcbd199a5d708b 192.168.190.128:6481
+   replicates ecb6ea2ebb629bff68768127644cd9c9572aa9d6
+Can I set the above configuration? (type 'yes' to accept): yes
+>>> Nodes configuration updated
+>>> Assign a different config epoch to each node
+>>> Sending CLUSTER MEET messages to join the cluster
+Waiting for the cluster to join
+.
+>>> Performing Cluster Check (using node 192.168.190.128:6379)
+M: 7db868c1cc519d4ecfdb3edf0ab5a000d2c01de1 192.168.190.128:6379
+   slots:[0-5460] (5461 slots) master       #主节点
+   1 additional replica(s)
+M: e3f911801c0cfc43192053a8f90a97f3668f7dbf 192.168.190.128:6381
+   slots:[10923-16383] (5461 slots) master   #主节点
+   1 additional replica(s)
+M: ecb6ea2ebb629bff68768127644cd9c9572aa9d6 192.168.190.128:6380
+   slots:[5461-10922] (5462 slots) master    #主节点
+   1 additional replica(s)
+S: 8171919e5e68918f709fbbb94a56865623f200b4 192.168.190.128:6479
+   slots: (0 slots) slave    #从节点
+   replicates e3f911801c0cfc43192053a8f90a97f3668f7dbf
+S: ee3f0e5906414358e2c072b277885556edaaae1b 192.168.190.128:6480
+   slots: (0 slots) slave    #从节点
+   replicates 7db868c1cc519d4ecfdb3edf0ab5a000d2c01de1
+S: b05914d3dbd74b12d9fed9295ebcbd199a5d708b 192.168.190.128:6481
+   slots: (0 slots) slave   #从节点
+   replicates ecb6ea2ebb629bff68768127644cd9c9572aa9d6
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+[root@localhost redisconf]# 
+````
+
+从上面的输出信息可以看出，用redis-cli命令创建主从集群的时候，用户是不能手动指定那个redis实例是主节点，哪个redis实例是从节点的。
+
+**⑤创建redis集群后添加slave节点**
+
+我们从第③步继续，这个时候这个redis就只有3个master节点没有slave节点，我们为192.168.190.128:6379添加一个从节点,首先得多一个redis配置文件
+
+````shell
+[root@localhost redisconf]# ls
+redis1.conf  redis1_slave.conf  redis2.conf  redis3.conf
+[root@localhost redisconf]# ps -ef | grep redis
+root       2689      1  0 03:56 ?        00:00:01 redis-server *:6379 [cluster]
+root       2695      1  0 03:56 ?        00:00:01 redis-server *:6380 [cluster]
+root       2702      1  0 03:56 ?        00:00:01 redis-server *:6381 [cluster]
+root       2730   1939  0 04:05 pts/1    00:00:00 grep --color=auto redis
+#启动redi1_slave实例
+[root@localhost redisconf]# redis-server redis1_slave.conf
+[root@localhost redisconf]# ps -ef | grep redis
+root       2689      1  0 03:56 ?        00:00:01 redis-server *:6379 [cluster]
+root       2695      1  0 03:56 ?        00:00:01 redis-server *:6380 [cluster]
+root       2702      1  0 03:56 ?        00:00:01 redis-server *:6381 [cluster]
+root       2732      1  0 04:05 ?        00:00:00 redis-server *:6479 [cluster]
+root       2738   1939  0 04:05 pts/1    00:00:00 grep --color=auto redis
+# 为集群中192.168.190.128:6379实例添加slave
+#说明：把6479节点加入到6380节点的所在集群中，并且当做node_id为 af156b7e144548dcdab3c0a715803df4344d93a3 的从节点。如果不指定 --cluster-master-id 会随机分配到任意一个主节点。
+[root@localhost redisconf]# redis-cli --cluster add-node 192.168.190.128:6479  192.168.190.128:6380   --cluster-slave --cluster-master-id af156b7e144548dcdab3c0a715803df4344d93a3
+[root@localhost redisconf]# redis-cli -p 6479
+127.0.0.1:6479> info replication
+# Replication
+role:slave
+master_host:192.168.190.128
+master_port:6379
+master_link_status:up
+master_last_io_seconds_ago:2
+master_sync_in_progress:0
+slave_repl_offset:266
+slave_priority:100
+slave_read_only:1
+connected_slaves:0
+master_replid:37a850d5592177ca2f0e1a4c7ebb399b2f750b8e
+master_replid2:0000000000000000000000000000000000000000
+master_repl_offset:266
+second_repl_offset:-1
+repl_backlog_active:1
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:1
+repl_backlog_histlen:266
+````
+
+**⑥添加master节点**
+
+在创建完集群一段时间后，服务器的硬盘满了怎么办？这个时候就需要横向去拓展redis集群扩大集群的存储容量，下面本文将演示如果去动态添加一个master节点.
+
+````shell
+#新起一个redis服务，端口为6382
+[root@localhost redisconf]# redis-server redis4.conf 
+[root@localhost redisconf]# 
+[root@localhost redisconf]# ps -ef | grep redis
+root       2689      1  0 08:00 ?        00:00:03 redis-server *:6379 [cluster]
+root       2695      1  0 08:00 ?        00:00:03 redis-server *:6380 [cluster]
+root       2702      1  0 08:00 ?        00:00:03 redis-server *:6381 [cluster]
+root       2732      1  0 08:10 ?        00:00:02 redis-server *:6479 [cluster]
+root       2958      1  1 08:31 ?        00:00:00 redis-server *:6382 [cluster]
+root       2964   2935  0 08:31 pts/0    00:00:00 grep --color=auto redis
+#将新启动的redis服务添加到redis集群中去
+[root@localhost redisconf]# redis-cli  --cluster add-node 192.168.190.128:6382  192.168.190.128:6379
+>>> Adding node 192.168.190.128:6382 to cluster 192.168.190.128:6379
+>>> Performing Cluster Check (using node 192.168.190.128:6379)
+M: af156b7e144548dcdab3c0a715803df4344d93a3 192.168.190.128:6379
+   slots:[0-5460] (5461 slots) master
+   1 additional replica(s)
+M: 8348997ceddf877df90d56d9654343a7860a8615 192.168.190.128:6381
+   slots:[10923-16383] (5461 slots) master
+S: 1924684b229acefbeabbd22b333868bbe238ebb2 192.168.190.128:6479
+   slots: (0 slots) slave
+   replicates af156b7e144548dcdab3c0a715803df4344d93a3
+M: 0c56d29ee04343dedb17968d2285ca56ab46602b 192.168.190.128:6380
+   slots:[5461-10922] (5462 slots) master
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+>>> Send CLUSTER MEET to node 192.168.190.128:6382 to make it join the cluster.
+
+````
+
+**⑧删除集群中的节点**
+
+删除slave节点
+
+````shell
+[root@localhost ~]# redis-cli  --cluster del-node 192.168.190.128:6379 1924684b229acefbeabbd22b333868bbe238ebb2
+>>> Removing node 1924684b229acefbeabbd22b333868bbe238ebb2 from cluster 192.168.190.128:6379
+>>> Sending CLUSTER FORGET messages to the cluster...
+>>> Sending CLUSTER RESET SOFT to the deleted node.
+````
+
+删除master节点
+
+````shell
+[root@localhost ~]# redis-cli  --cluster del-node 192.168.190.128:6379 af156b7e144548dcdab3c0a715803df4344d93a3
+>>> Removing node 815da8448f5d5a304df0353ca10d8f9b77016b28 from cluster 192.168.163.132:6380
+[ERR] Node 192.168.163.132:6380 is not empty! Reshard data away and try again.
+````
+
+注意：当被删除掉的节点重新起来之后不能自动加入集群，但其和主的复制还是正常的，也可以通过该节点看到集群信息（通过其他正常节点已经看不到该被del-node节点的信息）。
+
+如果想要再次加入集群，则需要先在该节点执行cluster reset，再用add-node进行添加，进行增量同步复制。
+
+到此，目前整个集群的状态如下：
+
+
+
+------
+
+**集群运维相关**
+
+**①检查集群**
+
+连接任意集群节点，进行集群状态检查
+
+````shell
+[root@localhost ~]# redis-cli --cluster check 192.168.190.128:6379 --cluster-search-multiple-owners
+192.168.190.128:6379 (af156b7e...) -> 0 keys | 4096 slots | 0 slaves.
+192.168.190.128:6381 (8348997c...) -> 0 keys | 4096 slots | 0 slaves.
+192.168.190.128:6380 (0c56d29e...) -> 0 keys | 4096 slots | 0 slaves.
+192.168.190.128:6382 (151229c4...) -> 0 keys | 4096 slots | 0 slaves.
+[OK] 0 keys in 4 masters.
+0.00 keys per slot on average.
+>>> Performing Cluster Check (using node 192.168.190.128:6379)
+M: af156b7e144548dcdab3c0a715803df4344d93a3 192.168.190.128:6379
+   slots:[1432-5494],[10923-10955] (4096 slots) master
+M: 8348997ceddf877df90d56d9654343a7860a8615 192.168.190.128:6381
+   slots:[12288-16383] (4096 slots) master
+M: 0c56d29ee04343dedb17968d2285ca56ab46602b 192.168.190.128:6380
+   slots:[6827-10922] (4096 slots) master
+M: 151229c4927af5751128220cfeda1a9b6d5b13e2 192.168.190.128:6382
+   slots:[0-1431],[5495-6826],[10956-12287] (4096 slots) master
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+>>> Check for multiple slot owners...
+[OK] No multiple owners found.
+````
+
+**②集群信息查看**
+
+````shell
+[root@localhost ~]# redis-cli --cluster info 192.168.190.128:6379 
+192.168.190.128:6379 (af156b7e...) -> 0 keys | 4096 slots | 0 slaves.
+192.168.190.128:6381 (8348997c...) -> 0 keys | 4096 slots | 0 slaves.
+192.168.190.128:6380 (0c56d29e...) -> 0 keys | 4096 slots | 0 slaves.
+192.168.190.128:6382 (151229c4...) -> 0 keys | 4096 slots | 0 slaves.
+[OK] 0 keys in 4 masters.
+0.00 keys per slot on average.
+````
+
+**③在线迁移slot**
+
+方法一：
+
+````shell
+[root@localhost redisconf]# redis-cli --cluster reshard 192.168.190.128:6379
+>>> Performing Cluster Check (using node 192.168.190.128:6379)
+M: af156b7e144548dcdab3c0a715803df4344d93a3 192.168.190.128:6379
+   slots:[0-5460] (5461 slots) master
+   1 additional replica(s)
+M: 8348997ceddf877df90d56d9654343a7860a8615 192.168.190.128:6381
+   slots:[10923-16383] (5461 slots) master
+M: 56111ece73508fe30dcf66b70dddde6f29443314 192.168.190.128:6382
+   slots: (0 slots) master
+M: 0c56d29ee04343dedb17968d2285ca56ab46602b 192.168.190.128:6380
+   slots:[5461-10922] (5462 slots) master
+S: 1924684b229acefbeabbd22b333868bbe238ebb2 192.168.190.128:6479
+   slots: (0 slots) slave
+   replicates af156b7e144548dcdab3c0a715803df4344d93a3
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+How many slots do you want to move (from 1 to 16384)? 100     #确认需要迁移多少个slot
+What is the receiving node ID? 56111ece73508fe30dcf66b70dddde6f29443314  #确认哪儿master需要接受slot
+Please enter all the source node IDs.
+  Type 'all' to use all the nodes as source nodes for the hash slots.
+  Type 'done' once you entered all the source nodes IDs.
+Source node #1: all
+
+Ready to move 100 slots.
+  Source nodes:
+    M: af156b7e144548dcdab3c0a715803df4344d93a3 192.168.190.128:6379
+       slots:[0-5460] (5461 slots) master
+       1 additional replica(s)
+    M: 8348997ceddf877df90d56d9654343a7860a8615 192.168.190.128:6381
+       slots:[10923-16383] (5461 slots) master
+    M: 0c56d29ee04343dedb17968d2285ca56ab46602b 192.168.190.128:6380
+       slots:[5461-10922] (5462 slots) master
+  Destination node:
+    M: 56111ece73508fe30dcf66b70dddde6f29443314 192.168.190.128:6382
+       slots: (0 slots) master
+  Resharding plan:
+    Moving slot 5461 from 0c56d29ee04343dedb17968d2285ca56ab46602b
+    Moving slot 5462 from 0c56d29ee04343dedb17968d2285ca56ab46602b
+    Moving slot 5463 from 0c56d29ee04343dedb17968d2285ca56ab46602b
+    Moving slot 5464 from 0c56d29ee04343dedb17968d2285ca56ab46602b
+    Moving slot 5465 from 0c56d29ee04343dedb17968d2285ca56ab46602b
+    Moving slot 5466 from 0c56d29ee04343dedb17968d2285ca56ab46602b
+    ....
+#查看分配slot后的集群信息
+[root@localhost redisconf]# redis-cli  --cluster check 192.168.190.128:6382 
+192.168.190.128:6382 (56111ece...) -> 0 keys | 100 slots | 0 slaves.
+192.168.190.128:6381 (8348997c...) -> 0 keys | 5428 slots | 0 slaves.
+192.168.190.128:6379 (af156b7e...) -> 0 keys | 5428 slots | 1 slaves.
+192.168.190.128:6380 (0c56d29e...) -> 0 keys | 5428 slots | 0 slaves.
+[OK] 0 keys in 4 masters.
+0.00 keys per slot on average.
+>>> Performing Cluster Check (using node 192.168.190.128:6382)
+M: 56111ece73508fe30dcf66b70dddde6f29443314 192.168.190.128:6382
+   slots:[0-32],[5461-5494],[10923-10955] (100 slots) master
+S: 1924684b229acefbeabbd22b333868bbe238ebb2 192.168.190.128:6479
+   slots: (0 slots) slave
+   replicates af156b7e144548dcdab3c0a715803df4344d93a3
+M: 8348997ceddf877df90d56d9654343a7860a8615 192.168.190.128:6381
+   slots:[10956-16383] (5428 slots) master
+M: af156b7e144548dcdab3c0a715803df4344d93a3 192.168.190.128:6379
+   slots:[33-5460] (5428 slots) master
+   1 additional replica(s)
+M: 0c56d29ee04343dedb17968d2285ca56ab46602b 192.168.190.128:6380
+   slots:[5495-10922] (5428 slots) master
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+````
+
+方法二：根据参数进行操作
+
+````shell
+[root@localhost redisconf]#  redis-cli --cluster  reshard 192.168.190.128:6379  --cluster-from af156b7e144548dcdab3c0a715803df4344d93a3   --cluster-to  151229c4927af5751128220cfeda1a9b6d5b13e2 --cluster-slots 10 --cluster-yes --cluster-timeout 5000 --cluster-pipeline 10 --cluster-replace
+>>> Performing Cluster Check (using node 192.168.190.128:6379)
+M: af156b7e144548dcdab3c0a715803df4344d93a3 192.168.190.128:6379
+   slots:[0-5494],[10923-10955] (5528 slots) master
+   1 additional replica(s)
+M: 8348997ceddf877df90d56d9654343a7860a8615 192.168.190.128:6381
+   slots:[10956-16383] (5428 slots) master
+M: 0c56d29ee04343dedb17968d2285ca56ab46602b 192.168.190.128:6380
+   slots:[5495-10922] (5428 slots) master
+M: 151229c4927af5751128220cfeda1a9b6d5b13e2 192.168.190.128:6382
+   slots: (0 slots) master
+S: 1924684b229acefbeabbd22b333868bbe238ebb2 192.168.190.128:6479
+   slots: (0 slots) slave
+   replicates af156b7e144548dcdab3c0a715803df4344d93a3
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+
+Ready to move 10 slots.
+  Source nodes:
+    M: af156b7e144548dcdab3c0a715803df4344d93a3 192.168.190.128:6379
+       slots:[0-5494],[10923-10955] (5528 slots) master
+       1 additional replica(s)
+  Destination node:
+    M: 151229c4927af5751128220cfeda1a9b6d5b13e2 192.168.190.128:6382
+       slots: (0 slots) master
+  Resharding plan:
+    Moving slot 0 from af156b7e144548dcdab3c0a715803df4344d93a3
+    Moving slot 1 from af156b7e144548dcdab3c0a715803df4344d93a3
+    Moving slot 2 from af156b7e144548dcdab3c0a715803df4344d93a3
+    Moving slot 3 from af156b7e144548dcdab3c0a715803df4344d93a3
+    Moving slot 4 from af156b7e144548dcdab3c0a715803df4344d93a3
+    Moving slot 5 from af156b7e144548dcdab3c0a715803df4344d93a3
+    Moving slot 6 from af156b7e144548dcdab3c0a715803df4344d93a3
+    Moving slot 7 from af156b7e144548dcdab3c0a715803df4344d93a3
+    Moving slot 8 from af156b7e144548dcdab3c0a715803df4344d93a3
+    Moving slot 9 from af156b7e144548dcdab3c0a715803df4344d93a3
+Moving slot 0 from 192.168.190.128:6379 to 192.168.190.128:6382: 
+Moving slot 1 from 192.168.190.128:6379 to 192.168.190.128:6382:
+......
+````
+
+**④平衡slot**
+
+方法一：
+
+```
+redis-cli --cluster rebalance 192.168.190.168:6379
+[root@localhost ~]# redis-cli --cluster rebalance 192.168.190.168:6379
+Could not connect to Redis at 192.168.190.168:6379: No route to host
+[root@localhost ~]# redis-cli --cluster rebalance 192.168.190.128:6379
+>>> Performing Cluster Check (using node 192.168.190.128:6379)
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+......
+```
+
+方法二：根据集群中各个节点设置的权重等平衡slot数量
+
+````shell
+redis-cli -a cc --cluster rebalance --cluster-weight 117457eab5071954faab5e81c3170600d5192270=5 815da8448f5d5a304df0353ca10d8f9b77016b28=4 56005b9413cbf225783906307a2631109e753f8f=3 --cluster-simulate 192.168.190.128:6379
+
+````
+
+##### cluster相关命令
+
+````shell
+redis-cli --cluster help
+Cluster Manager Commands:
+  create         host1:port1 ... hostN:portN   #创建集群
+                 --cluster-replicas <arg>      #从节点个数
+  check          host:port                     #检查集群
+                 --cluster-search-multiple-owners #检查是否有槽同时被分配给了多个节点
+  info           host:port                     #查看集群状态
+  fix            host:port                     #修复集群
+                 --cluster-search-multiple-owners #修复槽的重复分配问题
+  reshard        host:port                     #指定集群的任意一节点进行迁移slot，重新分slots
+                 --cluster-from <arg>          #需要从哪些源节点上迁移slot，可从多个源节点完成迁移，以逗号隔开，传递的是节点的node id，还可以直接传递--from all，这样源节点就是集群的所有节点，不传递该参数的话，则会在迁移过程中提示用户输入
+                 --cluster-to <arg>            #slot需要迁移的目的节点的node id，目的节点只能填写一个，不传递该参数的话，则会在迁移过程中提示用户输入
+                 --cluster-slots <arg>         #需要迁移的slot数量，不传递该参数的话，则会在迁移过程中提示用户输入。
+                 --cluster-yes                 #指定迁移时的确认输入
+                 --cluster-timeout <arg>       #设置migrate命令的超时时间
+                 --cluster-pipeline <arg>      #定义cluster getkeysinslot命令一次取出的key数量，不传的话使用默认值为10
+                 --cluster-replace             #是否直接replace到目标节点
+  rebalance      host:port                                      #指定集群的任意一节点进行平衡集群节点slot数量 
+                 --cluster-weight <node1=w1...nodeN=wN>         #指定集群节点的权重
+                 --cluster-use-empty-masters                    #设置可以让没有分配slot的主节点参与，默认不允许
+                 --cluster-timeout <arg>                        #设置migrate命令的超时时间
+                 --cluster-simulate                             #模拟rebalance操作，不会真正执行迁移操作
+                 --cluster-pipeline <arg>                       #定义cluster getkeysinslot命令一次取出的key数量，默认值为10
+                 --cluster-threshold <arg>                      #迁移的slot阈值超过threshold，执行rebalance操作
+                 --cluster-replace                              #是否直接replace到目标节点
+  add-node       new_host:new_port existing_host:existing_port  #添加节点，把新节点加入到指定的集群，默认添加主节点
+                 --cluster-slave                                #新节点作为从节点，默认随机一个主节点
+                 --cluster-master-id <arg>                      #给新节点指定主节点
+  del-node       host:port node_id                              #删除给定的一个节点，成功后关闭该节点服务
+  call           host:port command arg arg .. arg               #在集群的所有节点执行相关命令
+  set-timeout    host:port milliseconds                         #设置cluster-node-timeout
+  import         host:port                                      #将外部redis数据导入集群
+                 --cluster-from <arg>                           #将指定实例的数据导入到集群
+                 --cluster-copy                                 #migrate时指定copy
+                 --cluster-replace                              #migrate时指定replace
+  help           
+
+For check, fix, reshard, del-node, set-timeout you can specify the host and port of any working node in the cluster.
+````
+
+
+
 #### Redis缓存穿透
 
 ##### 概念
@@ -2077,7 +2575,7 @@ sentinel failover-timeout mymaster 180000
 
 **2、限流降级**
 
-再缓存失效后，通过加锁或者队列来控制读数据库写缓存的线程数量。不如某个key只需一个线程到数据库查询数据和写缓存，其他的线程则等待。
+再缓存失效后，通过加锁或者队列来控制读数据库写缓存的线程数量。比如某个key只许一个线程到数据库查询数据和写缓存，其他的线程则等待。
 
 **3、数据预热**
 
