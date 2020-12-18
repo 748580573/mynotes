@@ -1,4 +1,7 @@
+> 本章节内容摘抄自：https://github.com/JerryLead/SparkInternals/tree/master/markdown。
+
 ## 新书 (NEW BOOK)
+
 拖拖拉拉写了很久的书《大数据处理框架Apache Spark设计与实现》终于出版了。书的内容是以Apache Spark为主，系统总结了大数据处理框架的一些基本问题、设计原理、实现方案、以及性能和可靠性。相比SparkInternals，内容更完善专业深入。感谢孙学瑛编辑及团队的付出、感谢朋友们提出的审阅意见、以及实验室和亲朋好友的大力支持！大数据处理框架发展很快，还有很多优美匠心的设计和实现方案，本书抛砖引玉，期待有更多的朋友把这些知识总结展示出来。
 
 京东链接：https://item.jd.com/12924768.html
@@ -15,9 +18,9 @@ Spark Version: 1.0.2
 Doc Version: 1.0.2.0
 
 ## Authors
-| Weibo Id | Name | 
+| Weibo Id | Name |
 |:-----------|:-------------|
-|[@JerryLead](http://weibo.com/jerrylead) | Lijie Xu | 
+|[@JerryLead](http://weibo.com/jerrylead) | Lijie Xu |
 
 ## Introduction
 
@@ -82,21 +85,21 @@ Downloads
 
 感谢下列同学对文档内容的补充：
 
-| Weibo Id | 章节 | 补充内容 | 修改状态 | 
+| Weibo Id | 章节 | 补充内容 | 修改状态 |
 |:-----------|:-------------|:-------------|:-------------|
 | [@OopsOutOfMemory](http://weibo.com/oopsoom) | Overview | workers 与 executors 的关系及 [Spark Executor Driver资源调度小结](http://blog.csdn.net/oopsoom/article/details/38763985) | 由于这部分内容的相关实现还在不断 update，本文暂不作结论性总结，已添加详情链接到该同学的 blog |
 
 感谢下列同学指出文档中的不足或错误：
 
-| Weibo Id | 章节 | 不足或错误 | 修改状态 | 
+| Weibo Id | 章节 | 不足或错误 | 修改状态 |
 |:-----------|:-------------|:-------------|:-------------|
 | [@Joshuawangzj](http://weibo.com/u/1619689670) | Overview | 多个 application 运行时 worker 应该会启动多个 Backend 进程 | 已修改，但需要进一步实验证实。怎么控制 Backend 的个数还不清楚 |
 | [@\_cs\_cm](http://weibo.com/u/1551746393) | Overview | 最新的 groupByKey() 已经取消蕴含的 mapValues() 操作，没有MapValuesRDD 产生了 | 已修改 groupByKey() 相关的 figures 和描述 |
 | [@染染生起](http://weibo.com/u/2859927402) | JobLogicalPlan | FullDepedency 中的 N:N 关系是否属于 NarrowDependency | 将原来的两种 NarrowDependency 描述改为更清楚的三种，已做更详细的说明 |
-| [@zzl0](https://github.com/zzl0) | 前四章 | 很多 typos，比如 “groupByKey 产生了后面三个 RDD”，应该是两个。详见 [pull request](https://github.com/JerryLead/SparkInternals/pull/3/files)。 | 已经全部修改 | 
-| [@左手牵右手TEL](http://weibo.com/w397090770) | Cache 和 Broadcast 两章 | 很多 typos | 已经全部修改 | 
-| [@cloud-fan](https://github.com/cloud-fan) | JobLogicalPlan | Cogroup() 图中的某些剪头应该是红色的 | 已经全部修改 | 
-| [@CrazyJvm](http://weibo.com/476691290) | Shuffle details |  从 Spark1.1开始spark.shuffle.file.buffer.kb的默认值为32k，而不是100k  | 已经全部修改 | 
+| [@zzl0](https://github.com/zzl0) | 前四章 | 很多 typos，比如 “groupByKey 产生了后面三个 RDD”，应该是两个。详见 [pull request](https://github.com/JerryLead/SparkInternals/pull/3/files)。 | 已经全部修改 |
+| [@左手牵右手TEL](http://weibo.com/w397090770) | Cache 和 Broadcast 两章 | 很多 typos | 已经全部修改 |
+| [@cloud-fan](https://github.com/cloud-fan) | JobLogicalPlan | Cogroup() 图中的某些剪头应该是红色的 | 已经全部修改 |
+| [@CrazyJvm](http://weibo.com/476691290) | Shuffle details |  从 Spark1.1开始spark.shuffle.file.buffer.kb的默认值为32k，而不是100k  | 已经全部修改 |
 
 特别感谢 [@明风Andy](http://weibo.com/mingfengandy) 同学给予的大力支持。
 
