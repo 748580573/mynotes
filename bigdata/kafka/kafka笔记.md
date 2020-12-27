@@ -294,9 +294,7 @@ Topic: test	PartitionCount: 1	ReplicationFactor: 1	Configs: segment.bytes=107374
 
 * --from-beginning 表示从开头的地方消费消息，这里的开头不是最新的消息。
 
-
-
-## Kafka的工作流程与文件存储机制
+## Kafka之数据存储
 
 ### topic的存储机制
 
@@ -355,3 +353,73 @@ total 20500
 
 在这里000000000000000368769.log这个文件记录第368769到下一个log文件编号的消息。假设这个文件有n条消息，那么第3条消息对应的是497，那么也就是说在log文件中，第3条消息（在log全局的368772个message）在本文件的物理便宜地址为497.
 
+### topic的分区规则
+
+1.在指定分区的时候，kafka会将数据存入指定的分区中
+
+````java
+public ProducerRecord(String topic, Integer partition, Long timestamp, K key, V value, Iterable<Header> headers)
+public ProducerRecord(String topic, Integer partition, Long timestamp, K key, V value)
+public ProducerRecord(String topic, Integer partition, K key, V value, Iterable<Header> headers)
+public ProducerRecord(String topic, Integer partition, K key, V value)
+````
+
+2.没有明确指定分区但是指定了key的时候，将key的hash值与topic的partition数据进行取余得到partion的值
+
+````java
+public ProducerRecord(String topic, K key, V value)
+````
+
+3.既没有指定分区也没有指定key的时候，第一次调用时随机生成一个整数（后面每次调用在这个整数上自增），将这个值与topic可用的partition总数取余得到partition值，也就时常说的轮询算法。
+
+### 数据可靠性保证
+
+#### 问题
+
+下面简单的说一下在kafka中，怎样保证leader分区与follower之间的数据可靠性，即kafka在进行数据备份的时候需要解决哪些问题。
+
+1. 怎么propagate消息
+2. 在向Producer发送ACK前需要保证有多少个replica已经收到该消息
+3. 怎么处理replica不工作的情况
+4. 怎么处理field replica恢复的情况
+
+#### propagate
+
+1.kafka的topic可以设置有N个副本（replica），副本数最好要小于broker的数量，也就是要保证一个broker上的replica最多有一个，所以可以用broker id指定Partition replica。
+
+2.创建副本的单位是topic的分区，每个分区有1个leader和0到多个follower，我们把多个replica分为Lerder replica和follower replica。
+
+3.当producer在向partition中写数据时，根据ack机制，默认ack=1，只会向leader中写入数据，然后leader中的数据会复制到其他的replica中，follower会周期性的从leader中pull数据，但是对于数据的读写操作都在leader replica中，follower副本只是当leader副本挂了后才重新选取leader，follower并不向外提供服务。
+
+通过zookeeper先知道leader在哪一台机器上，然后produce将消息发送到leader上，Follower 在收到该消息并写入其 Log 后，向 Leader 发送 ACK。一旦 Leader 收到了 ISR 中的所有 Replica 的 ACK，该消息就被认为已经 commit 了，Leader 将增加 High Watermark并且向 Producer 发送 ACK。
+
+![](./img/notes/4.png)
+
+#### ACK 前需要保证有多少个 Replica 已经收到该消息
+
+Leader 会跟踪与其保持同步的 Replica 列表，该列表称为 ISR（即 in-sync Replica 同步中的副本）。如果一个 Follower 宕机，或者数据数落后太多，Leader 将把它从 ISR 中移除，即replica.lag.max.messages（注：这条规则在新版本中已被删除[](./Kafka为何去掉replica-lag-max-messages.md)）。
+
+**Kafka 的复制机制既不是完全的同步复制，也不是单纯的异步复制**。**完全同步复制**要求所有能工作的 Follower 都复制完，这条消息才会被认为 commit，这种复制方式极大的影响了吞吐率（高吞吐率是 Kafka 非常重要的一个特性）。而**异步复制方式下**，Follower 异步的从 Leader 复制数据，数据只要被 Leader 写入 log 就被认为已经 commit，这种情况下如果 Follower 都复制完都落后于 Leader，而如果 Leader 突然宕机，则会丢失数据。
+
+#### Data Replication如何处理Replica全部宕机
+
+1、等待ISR中任一Replica恢复,并选它为Leader
+
+- 等待时间较长,降低可用性
+- 或ISR中的所有Replica都无法恢复或者数据丢失,则该Partition将永不可用
+
+2、选择第一个恢复的Replica为新的Leader,无论它是否在ISR中
+
+- 并未包含所有已被之前Leader Commit过的消息,因此会造成数据丢失
+- 可用性较高
+
+#### Data Replication如何处理Replica恢复
+
+leader挂掉了，从它的follower中选举一个作为leader，并把挂掉的leader从ISR中移除，继续处理数据。一段时间后该leader重新启动了，它知道它之前的数据到哪里了，尝试获取它挂掉后leader处理的数据，获取完成后它就加入了ISR。
+
+#### ack机制
+
+| 方案                        | 优点                                               | 缺点                                                |
+| --------------------------- | -------------------------------------------------- | --------------------------------------------------- |
+| 半数以上完成同步，就发送ack | 延迟低                                             | 选举新的leader时，容忍n台节点的故障，需要2n+1个副本 |
+| 全部完成同步，才发送ack     | 选举新的leader时，容忍n台节点的故障，需要n+1个副本 | 延迟高                                              |
