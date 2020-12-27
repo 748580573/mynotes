@@ -397,7 +397,7 @@ public ProducerRecord(String topic, K key, V value)
 
 #### ACK 前需要保证有多少个 Replica 已经收到该消息
 
-Leader 会跟踪与其保持同步的 Replica 列表，该列表称为 ISR（即 in-sync Replica 同步中的副本）。如果一个 Follower 宕机，或者数据数落后太多，Leader 将把它从 ISR 中移除，即replica.lag.max.messages（注：这条规则在新版本中已被删除[](./Kafka为何去掉replica-lag-max-messages.md)）。
+Leader 会跟踪与其保持同步的 Replica 列表，该列表称为 ISR（即 in-sync Replica 同步中的副本）。如果一个 Follower 宕机，或者数据数落后太多，Leader 将把它从 ISR 中移除，即replica.lag.max.messages（注：这条规则在新版本中已被删除[Kafka为何去掉replica-lag-max-messages](./Kafka为何去掉replica-lag-max-messages.md )）。
 
 **Kafka 的复制机制既不是完全的同步复制，也不是单纯的异步复制**。**完全同步复制**要求所有能工作的 Follower 都复制完，这条消息才会被认为 commit，这种复制方式极大的影响了吞吐率（高吞吐率是 Kafka 非常重要的一个特性）。而**异步复制方式下**，Follower 异步的从 Leader 复制数据，数据只要被 Leader 写入 log 就被认为已经 commit，这种情况下如果 Follower 都复制完都落后于 Leader，而如果 Leader 突然宕机，则会丢失数据。
 
