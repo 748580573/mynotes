@@ -417,7 +417,362 @@ Stream提供了XINFO来实现对服务器信息的监控，可以查询：
 
 `Stream` 是基于 `RadixTree` 数据结构实现的。另立话题讨论。[基数树，http://www.hellokang.net/algorithm/radix-tree.html](http://www.hellokang.net/algorithm/radix-tree.html)
 
-## 12 相关产品
+## 12 使用Jedis操作
+
+demo1
+
+````java
+/**
+ * 2020年11月5日下午4:55:43
+ */
+package testJedisStream;
+ 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+ 
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.StreamEntry;
+import redis.clients.jedis.StreamEntryID;
+ 
+/**
+ * @author XWF
+ *
+ */
+public class TestJedisStream {
+	
+	private static JedisPoolConfig jpc = new JedisPoolConfig();
+	private static JedisPool jedisPool;
+	
+	static {
+		jpc.setMaxTotal(200);
+		jpc.setMaxIdle(10);
+		jpc.setMaxWaitMillis(1000);
+		jpc.setTestOnBorrow(true);
+		jpc.setTestOnReturn(true);
+		jedisPool = new JedisPool(jpc, "192.168.1.187", 6379, 1000, "654321", 1);
+	}
+ 
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		System.out.println("StreamEntryID.NEW_ENTRY=" + StreamEntryID.NEW_ENTRY);
+		System.out.println("StreamEntryID.LAST_ENTRY=" + StreamEntryID.LAST_ENTRY);
+		System.out.println("StreamEntryID.UNRECEIVED_ENTRY=" + StreamEntryID.UNRECEIVED_ENTRY);
+		System.out.println();
+		
+		xadd();
+		xlen();
+		System.out.println();
+		xread();
+		xrange();
+		xrevrange();
+		System.out.println();
+		xdel();
+		xlen();
+		System.out.println();
+		xadd();
+		xadd();
+		xlen();
+		xtrim();
+		xlen();
+		
+		try(Jedis jd = jedisPool.getResource()) {
+			jd.del("k");
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void xadd() {
+		try(Jedis jd = jedisPool.getResource()) {
+			Map<String, String> hash = new HashMap<>();
+			hash.put("name", "Tom");
+			hash.put("age", "13");
+			//key, id, hash
+			StreamEntryID id = jd.xadd("k", StreamEntryID.NEW_ENTRY, hash);
+//			StreamEntryID id = jd.xadd("k", new StreamEntryID("1-1"), hash);
+			System.out.println("xadd1 id:" + id.toString());
+			Map<String, String> hash2 = new HashMap<>();
+			hash2.put("name", "Jerry");
+			hash2.put("age", "12");
+			//key, id, hash, len, ~(false)
+			StreamEntryID id2 = jd.xadd("k", StreamEntryID.NEW_ENTRY, hash2, 5, false);
+			System.out.println("xadd2 id:" + id2.toString());
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	public static void xlen() {
+		try(Jedis jd = jedisPool.getResource()) {
+			long len = jd.xlen("k");
+			System.out.println("len=" + len);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	public static void xread() {
+		try(Jedis jd = jedisPool.getResource()) {
+			//count, block, key-id...
+			List<Entry<String, List<StreamEntry>>> list = jd.xread(1, 1000, new MyJedisEntry("k", "0"), new MyJedisEntry("k", "0"));
+			System.out.println(list);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	public static void xrange() {
+		try(Jedis jd = jedisPool.getResource()) {
+			//key, start, end, count
+			//null表示无穷小或者无穷大
+			List<StreamEntry> list = jd.xrange("k", null, null, 100);
+			System.out.println("xrange:" + list);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	public static void xrevrange() {
+		try(Jedis jd = jedisPool.getResource()) {
+			//key, end, start, count
+			List<StreamEntry> list = jd.xrevrange("k", null, null, 100);
+			System.out.println("xrevrange:" + list);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	public static void xdel() {
+		try(Jedis jd = jedisPool.getResource()) {
+			List<Entry<String, List<StreamEntry>>> getid = jd.xread(1, 0, new MyJedisEntry("k", "0"));
+			Entry<String, List<StreamEntry>> k_entrylist = getid.get(0);
+			List<StreamEntry> entrylist = k_entrylist.getValue();
+			String id = entrylist.get(0).getID().toString();
+			//key, id...
+			long result = jd.xdel("k", new StreamEntryID(id));
+			System.out.println("xdel " + id + " return:" + result);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	public static void xtrim() {
+		try(Jedis jd = jedisPool.getResource()) {
+			//key, len, ~(false)
+			long result = jd.xtrim("k", 2, false);
+			System.out.println("xtrim 2 return=" + result);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+ 
+}
+class MyJedisEntry implements Entry<String, StreamEntryID>{
+	private String k;
+	private StreamEntryID id;
+	public MyJedisEntry(String key, String id){
+		this.k = key;
+		if("0".equals(id)) {
+			this.id = new StreamEntryID();
+		}else {
+			this.id = new StreamEntryID(id);
+		}
+	}
+	public MyJedisEntry(String key, StreamEntryID ID) {
+		this.k = key;
+		this.id = ID;
+	}
+	@Override
+	public String getKey() {
+		return k;
+	}
+	@Override
+	public StreamEntryID getValue() {
+		return id;
+	}
+	@Override
+	public StreamEntryID setValue(StreamEntryID value) {
+		this.id = value;
+		return id;
+	}
+}
+````
+
+运行结果为：
+
+![](./img/streams/2.png)
+
+demo2：
+
+````shell
+/**
+ * 2020年11月6日上午9:47:18
+ */
+package testJedisStream;
+ 
+import java.util.List;
+import java.util.Map.Entry;
+ 
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.StreamConsumersInfo;
+import redis.clients.jedis.StreamEntry;
+import redis.clients.jedis.StreamEntryID;
+import redis.clients.jedis.StreamGroupInfo;
+import redis.clients.jedis.StreamInfo;
+import redis.clients.jedis.StreamPendingEntry;
+ 
+/**
+ * @author XWF
+ *
+ */
+public class TestJedisStream2 {
+ 
+	private static JedisPoolConfig jpc = new JedisPoolConfig();
+	private static JedisPool jedisPool;
+	
+	static {
+		jpc.setMaxTotal(200);
+		jpc.setMaxIdle(10);
+		jpc.setMaxWaitMillis(1000);
+		jpc.setTestOnBorrow(true);
+		jpc.setTestOnReturn(true);
+		jedisPool = new JedisPool(jpc, "192.168.1.187", 6379, 1000, "654321", 1);
+	}
+	
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		xgroup();
+		System.out.println();
+		xreadgroup();
+		xpending();
+		System.out.println();
+		xack();
+		xpending();
+		System.out.println();
+		xclaim();
+		xpending();
+		System.out.println();
+		xinfo();
+		
+		try(Jedis jd = jedisPool.getResource()) {
+			jd.del("k");
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+ 
+	public static void xgroup() {
+		try(Jedis jd = jedisPool.getResource()) {
+			//key, groupName, id, makeStream
+			String g1result = jd.xgroupCreate("k", "g1", new StreamEntryID(), true);
+			System.out.println("xgroupCreate g1 result:" + g1result);
+			String g2result = jd.xgroupCreate("k", "g2", new StreamEntryID(), false);
+			System.out.println("xgroupCreate g2 result:" + g2result);
+			String setIdResult = jd.xgroupSetID("k", "g2", new StreamEntryID("123-123"));
+			System.out.println("xgroupSetID result:" + setIdResult);
+			Long delConsumerResult = jd.xgroupDelConsumer("k", "g2", "Tom");
+			System.out.println("xgroupDelConsumer result:" + delConsumerResult);
+			long destroyResult = jd.xgroupDestroy("k", "g2");
+			System.out.println("xgroupDestroy result:" + destroyResult);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	public static void xreadgroup() {
+		try(Jedis jd = jedisPool.getResource()) {
+			TestJedisStream.xadd();
+			MyJedisEntry entry = new MyJedisEntry("k", StreamEntryID.UNRECEIVED_ENTRY);
+			//groupName, consumer, count, block, noAck(false加入pending列表), streams
+			List<Entry<String, List<StreamEntry>>> xreadGroupResult = jd.xreadGroup("g1", "Jerry", 2, 0, false, entry);
+			System.out.println("xreadGroup result:" + xreadGroupResult);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	public static void xpending() {
+		try(Jedis jd = jedisPool.getResource()) {
+			//key, groupName, start, end, count, consumer
+			List<StreamPendingEntry> pendings = jd.xpending("k", "g1", null, null, 10, null);
+			System.out.println("xpending result:" + pendings);
+			//StreamPendingEntry
+//			pendings.get(0).getID().toString();
+//			pendings.get(0).getConsumerName();
+//			pendings.get(0).getIdleTime();
+//			pendings.get(0).getDeliveredTimes();
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	public static void xack() {
+		try(Jedis jd = jedisPool.getResource()) {
+			List<StreamPendingEntry> pendings = jd.xpending("k", "g1", null, null, 10, null);
+			StreamEntryID id = pendings.get(0).getID();
+			//key, groupName, ids...
+			long xackResult = jd.xack("k", "g1", id);
+			System.out.println("xack " + id + " result:" + xackResult);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	public static void xclaim() {
+		try(Jedis jd = jedisPool.getResource()) {
+			List<StreamPendingEntry> pendings = jd.xpending("k", "g1", null, null, 10, null);
+			StreamEntryID id = pendings.get(0).getID();
+			//key, group, consumer, minIdleTime, newIdleTime, retryCount, force, ids...
+			List<StreamEntry> xclaimResult = jd.xclaim("k", "g1", "Jack", 2, 1000000, 20, false, id);
+			System.out.println("xclaim " + id + " result:" + xclaimResult);
+			//StreamEntry
+//			xclaimResult.get(0).getID();//StreamEntryID
+//			xclaimResult.get(0).getFields();//Map<String, String>
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	public static void xinfo() {
+		try(Jedis jd = jedisPool.getResource()) {
+			List<StreamConsumersInfo> xinfoConsumersResult = jd.xinfoConsumers("k", "g1");
+			System.out.println("xinfoConsumers result:" + xinfoConsumersResult);
+			for( StreamConsumersInfo consumersinfo : xinfoConsumersResult) {
+				System.out.println("-ConsumerInfo:" + consumersinfo.getConsumerInfo());
+				System.out.println("--Name:" + consumersinfo.getName());
+				System.out.println("--Pending:" + consumersinfo.getPending());
+				System.out.println("--Idle:" + consumersinfo.getIdle());
+			}
+			List<StreamGroupInfo> xinfoGroupResult = jd.xinfoGroup("k");
+			System.out.println("xinfoGroup result:" + xinfoGroupResult);
+			for(StreamGroupInfo groupinfo : xinfoGroupResult) {
+				System.out.println("-GroupInfo:" + groupinfo.getGroupInfo());
+				System.out.println("--Name:" + groupinfo.getName());
+				System.out.println("--Consumers:" + groupinfo.getConsumers());
+				System.out.println("--Pending:" + groupinfo.getPending());
+				System.out.println("--LastDeliveredId:" + groupinfo.getLastDeliveredId());
+			}
+			StreamInfo xinfoStreamResult = jd.xinfoStream("k");
+			System.out.println("xinfoStream result:" + xinfoStreamResult);
+			System.out.println("-StreamInfo:" + xinfoStreamResult.getStreamInfo());
+			System.out.println("--Length:" + xinfoStreamResult.getLength());
+			System.out.println("--RadixTreeKeys:" + xinfoStreamResult.getRadixTreeKeys());
+			System.out.println("--RadixTreeNodes():" + xinfoStreamResult.getRadixTreeNodes());
+			System.out.println("--Groups:" + xinfoStreamResult.getGroups());
+			System.out.println("--LastGeneratedId:" + xinfoStreamResult.getLastGeneratedId());
+			System.out.println("--FirstEntry:" + xinfoStreamResult.getFirstEntry());
+			System.out.println("--LastEntry:" + xinfoStreamResult.getLastEntry());
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+}
+````
+
+运行结果：
+
+![](./img/streams/3.png)
+
+## 13 相关产品
 
 很多成熟的MQ产品：
 
