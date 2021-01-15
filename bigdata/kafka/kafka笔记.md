@@ -463,3 +463,32 @@ follower放生故障后会被临时踢出ISR,待该follower恢复后，follower�
 leader发生故障之后，会从ISR中选出一个新的leader，之后，为保证多个副本之间的数据一致性，其余的follower会先将各自的log文件高于HW的那一步分截取掉，然后从新的leader同步数据。
 
 注意：这只能保证副本间数据的一致性，并不能保证数据不丢失或者不重复。
+
+### Exactly once
+
+将服务器的ACK设置为-1，可以保证Producer到Server之间不会丢失数据。即At least once语音。相对的，将服务器的ACK设置为0，则可以保证每条消息只会被发送一次，即at most once。
+
+at least once可以保证数据不会丢失但是不会保证数据不会重复，相对的at most once可以保证数据不会重复，但是不能保证数据不会丢失。但是一些重要的数据，比如交易信息，下游消费者要求数据不会重复也不会丢失，即exactly once。在0.11版本前kafka对此是无能为力的，只能通过下游消费者自己实现exactly once，在0.11版本后的Kafka引入了新的特性--幂等性。所谓的幂等性就是指Producer不论向Server发送多少次重复消费，Server发送多少次重复数据，Server端都只会持久化一条。幂等性结合At least once语义就构成了Kafka的Exactly once。
+
+要启动幂等性，只需要将Producer的参数中enable.idempotence设置为true即可。开启幂等性的Producer初始化的时候会被分配一个PID,发往同一个Partition的消息会附带Sequence  Number.而Broker端会对<PID,Partition,SeqNumber>做缓存，当具有相同主键的消息提交时，Broker只会持久化一条。
+
+每个新的 Producer 在初始化的时候会被分配一个唯一的 PID，该PID对用户完全透明而不会暴露给用户。在底层，它和 TCP 的工作原理有点像，每一批发送到 Kafka 的消息都将**包含 PID 和一个从 0 开始单调递增序列号**。
+
+Broker 将使用这个序列号来删除重复的发送。和只能在瞬态内存中的连接中保证不重复的 TCP 不同，这个序列号被持久化到副本日志，所以，即使分区的 leader 挂了，其他的 broker 接管了leader，新 leader 仍可以判断重新发送的是否重复了。这种机制的开销非常低：每批消息只有几个额外的字段。这种特性比非幂等的生产者只增加了可忽略的性能开销。
+
+- 如果消息序号比 Broker 维护的序号大 1 以上，说明中间有数据尚未写入，也即乱序，此时 Broker 拒绝该消息。
+- 如果消息序号小于等于 Broker 维护的序号，说明该消息已被保存，即为重复消息，Broker直接丢弃该消息。
+
+但是PID重启就会变化，同时不同的Partition也具有不同主键，所以幂等性无法保证跨分区会话的exactly once。
+
+
+
+## Kafka消费者
+
+### 消费方式
+
+consumer采用pull(拉)模式从broker中读取数据。
+
+push(推)模式很难适应消费速率不同的消费者，因为消息消息的发送速率是由broker决定的。它的目标时尽可能以最快的速率传递消息，但是这样很容易造成consumer来不及处理消息，典型的表现就是拒绝服务以及网络拥塞。而pull模式则可以根据consumer的消费能力以适当的速率消费消息。
+
+Pull消费不足之处在是：如果kafka没有数据，消费者可能陷入循环中，一直返回空数据。针对这一点,Kafka的消费者在消费数据时会传入一个超市参数timeout，如果当前没有数据可供消费，consumer会等待一段时间后再返回，这段时长则为timeout。
