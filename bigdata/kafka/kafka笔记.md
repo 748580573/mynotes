@@ -23,6 +23,8 @@ kafka下载地址：http://kafka.apache.org/downloads，本文使用的2.5.0版�
 
 ### 配置文件
 
+#### 服务器配置文件
+
 ````shell
 每一个broker在集群中的唯一表示，要求是正数，kafka及其根据id来识别broker机器。当该服务器的IP地址发生改变时，broker.id没有变化，则不会影响consumers的消息情况
 broker.id =0
@@ -218,6 +220,15 @@ zookeeper.connection.timeout.ms =6000
 ZooKeeper集群中leader和follower之间的同步实际那
 zookeeper.sync.time.ms =2000
 ````
+
+#### 生产者配置文件
+
+````shell
+# 配置请求的消息体的最大值
+max.request.size = 5242880 （5M）请求的最大大小为字节。要小于 message.max.bytes
+````
+
+
 
 ## Kafka操作
 
@@ -641,3 +652,138 @@ RoundRobin再平衡后的分配情况：
 这里我们惊奇的发现sticky只是把之前C0消耗的T0p0分配给了C1，我们结合资源消耗来看，这相比RoundRobin能节省更多的资源。
 
 因此，强烈建议使用sticky分区分配策略。
+
+## Kafka事务
+
+待填写
+
+## Kafka Api
+
+### 消息发送流程
+
+Kafka的Producer发送消息采用的是异步发送的方式。在消息发送的过程中，涉及到了两个线程城----produver线程和sender线程，以及一个线程共享变量----RecordAccumulator，Sender线程不断从RecordAccumulator中拉取消息发送到Kafka broker。
+
+![](./img/notes/6.png)
+
+相关参数：
+
+batch.size：只有数据累计到batch.size之后，sender才会发送数据。
+
+linger.ms：如果数据迟迟未到batch.size，sender等待linger.time之后就会发送数据。
+
+### 生产者API
+
+````xml
+        <!-- https://mvnrepository.com/artifact/org.apache.kafka/kafka -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka_2.12</artifactId>
+            <version>2.5.0</version>
+        </dependency>
+````
+
+编写生产者代码
+
+````java
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+
+public class Test {
+
+    public static void main(String[] args) throws InterruptedException {
+
+        Properties properties = new Properties();
+        properties.put("bootstrap.servers","192.168.190.128:9092");
+        properties.put("acks","all");
+        //等待的时间
+        properties.put("retries",3);
+        //16kb
+        properties.put("batch.size",16384);
+
+        properties.put("linger.ms",1);
+
+        //RecordAccumulator缓冲区大小
+        properties.put("buffer.memory",33554432);
+
+        properties.put("key.serializer","org.apache.kafka.common.serialization.StringSerializer");
+
+        properties.put("value.serializer","org.apache.kafka.common.serialization.StringSerializer");
+
+        //创建生产者对象
+        KafkaProducer<String,String> producer = new KafkaProducer<>(properties);
+
+        List<Future<RecordMetadata>> list = new ArrayList<>();
+        //发送数据
+        for (int i = 0;i < 10;i++){
+            list.add(producer.send(new ProducerRecord<>("bigdata2", "name" + i)));
+        }
+        list.forEach(e -> {
+            try {
+                e.get();
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            } catch (ExecutionException ex) {
+                ex.printStackTrace();
+            }
+        });
+    }
+}
+````
+
+#### 
+
+### 消费者API
+
+````java
+
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+
+import java.util.Collections;
+import java.util.Properties;
+
+public class Test {
+
+    public static void main(String[] args) throws InterruptedException {
+
+        //消费者配置信息
+        Properties properties = new Properties();
+        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,"mark1:9092");
+
+        //开启自动提交，提交offset
+        properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG,true);
+        //自动提交时间，提交offset
+        properties.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG,1000);
+
+        //反序列化
+        properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,"org.apache.kafka.common.serialization.StringDeserializer");
+        properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,"org.apache.kafka.common.serialization.StringDeserializer");
+
+        //消费者组
+        properties.put(ConsumerConfig.GROUP_ID_CONFIG,"hw");
+
+        KafkaConsumer<String,String> kafkaConsumer = new KafkaConsumer<>(properties);
+        //订阅主题
+        kafkaConsumer.subscribe(Collections.singletonList("bigdata2"));
+
+        //拉取数据
+        ConsumerRecords<String, String> poll = kafkaConsumer.poll(100000000);
+
+        for (ConsumerRecord<String,String > consumerRecord : poll){
+            System.out.println(consumerRecord.key() + "----" + consumerRecord.value());
+        }
+
+        kafkaConsumer.close();
+    }
+}
+````
+
