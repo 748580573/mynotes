@@ -52,3 +52,28 @@ dataset = spark.read()
       .mode(SaveMode.Overwrite)
       .jdbc(url,"test2",prop)
 ````
+
+## 以空表头创建dataset
+
+```java
+   public static void main(String[] args) {
+	SparkSession sparkSession = SparkSession.builder().appName("Test").master("local")
+           .config("spark.sql.inMemoryColumnarStorage.compressed", "true").getOrCreate();
+	*//给定一串表头*
+	String colstr = "编号,姓名,性别,年龄";
+	*//以,分割*
+	String[] cols = colstr.split(",");
+	List<StructField> fields = new ArrayList<>();
+	for (String fieldName : cols) {
+		*//创建StructField，因不知其类型，默认转为字符型*
+		StructField field = DataTypes.createStructField(fieldName, DataTypes.StringType, true);
+		fields.add(field);
+	}
+	*//创建StructType*
+	StructType schema = DataTypes.createStructType(fields);
+	List<Row> rows = new ArrayList<>();
+	*//创建只包含schema的Dataset*
+	Dataset<Row> data = sparkSession.createDataFrame(rows, schema);
+	data.show();
+}
+```
