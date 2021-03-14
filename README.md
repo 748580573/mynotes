@@ -12,7 +12,7 @@ These are some study notes that I usually collect or write by myself
 
 [springcloud](https://github.com/748580573/mynotes/tree/master/java/springcloud)
 
-[多线程](https://github.com/748580573/mynotes/tree/master/多线程)
+[多线程](https://github.com/748580573/mynotes/tree/master/java/多线程)
 
 [设计模式](https://github.com/748580573/mynotes/tree/master/设计模式)
 
