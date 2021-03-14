@@ -3,7 +3,7 @@
 ````shell
 grant select,insert,update,create on *.*  to test@'192.168.8.%' identified by '123456'; 
 
-grant all on *.*  to test@'192.168.8.%' identified by '123456'; 
+grant all on *.*  to root@'192.168.8.%' identified by 'wuheng'; 
 
 grant all privileges on *.* to 'root'@'%' identified by '123456' with grant option;
 

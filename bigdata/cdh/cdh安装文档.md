@@ -19,7 +19,7 @@
 - 兼容性：利用您现有的IT基础设施和投资。
 
 CDH 组件如下图：
-[![image](https://xuchao918.github.io/images/cdh-01.jpg)](https://xuchao918.github.io/images/cdh-01.jpg)
+![](./imgs/cdhinstall/1.jpg)
 
 ### 2.Cloudera Manager 介绍
 
@@ -219,6 +219,11 @@ cloudera-manager-daemons-6.2.0-968826.el7.x86_64.rpm
 ```
 //下载地址，https://repo.huaweicloud.com/java/jdk/8u202-b08/
 rpm -ivh jdk-8u202-linux-x64.rpm
+#如果已经存在Jdk，则将jdk在/usr/java/default目录下建立软连接
+[root@mark1 default]# pwd
+/usr/java/default
+[root@mark1 default]# ls
+bin  COPYRIGHT  include  javafx-src.zip  jmc.txt  jre  legal  lib  LICENSE  man  README.html  release  src.zip  THIRDPARTYLICENSEREADME-JAVAFX.txt  THIRDPARTYLICENSEREADME.txt
 ```
 
 
@@ -326,7 +331,7 @@ cp mysql-connector-java-5.1.46-bin.jar /usr/share/java/mysql-connector-java.jar
 
 
 6.为 Cloudera 各软件创建数据库
-[![image](https://xuchao918.github.io/images/cdh-02.png)](https://xuchao918.github.io/images/cdh-02.png)
+![](./imgs/cdhinstall/2.png)
 
 将如下内容，写入到cdh.sql文件中。
 
@@ -418,17 +423,17 @@ tail -f /var/log/cloudera-scm-server/cloudera-scm-server.log
 ## 初始化 Cloudera Manager
 
 稍等下，浏览器打开[http://172.16.12.11:7180，用户名和密码默认都是admin。](http://172.16.12.11:7180，用户名和密码默认都是admin。/)
-[![image](https://xuchao918.github.io/images/cdh-03.png)](https://xuchao918.github.io/images/cdh-03.png)
+![](./imgs/cdhinstall/3.png)
 
 然后按需，继续下一步操作即可。
 
 ## CDH集群安装
 
 指定要添加的节点。
-[![image](https://xuchao918.github.io/images/cdh-04.png)](https://xuchao918.github.io/images/cdh-04.png)
+![](./imgs/cdhinstall/4.png)
 
 选择存储库，之前我们已经在 CM Server 节点配置好了。
-[![image](https://xuchao918.github.io/images/cdh-05.png)](https://xuchao918.github.io/images/cdh-05.png)
+![](./imgs/cdhinstall/5.png)
 
 不勾选“安装 Oracle Java SE 开发工具包 (JDK)”，选择我们自己安装的 JDK。
 
@@ -443,13 +448,13 @@ tail -f /var/log/cloudera-scm-server/cloudera-scm-server.log
 ## 集群设置
 
 选择要安装的服务，可以根据自己的需求进行软件安装。
-[![image](https://xuchao918.github.io/images/cdh-06.png)](https://xuchao918.github.io/images/cdh-06.png)
+![](./imgs/cdhinstall/6.png)
 
 自定义角色分配。
-[![image](https://xuchao918.github.io/images/cdh-07.png)](https://xuchao918.github.io/images/cdh-07.png)
+![](./imgs/cdhinstall/7.png)
 
 数据库设置。
-[![image](https://xuchao918.github.io/images/cdh-08.png)](https://xuchao918.github.io/images/cdh-08.png)
+![](./imgs/cdhinstall/7.png)
 
 审核更改，如果有特定目录的设定或者参数的设定，可以在这里进行更正。
 
@@ -458,7 +463,7 @@ tail -f /var/log/cloudera-scm-server/cloudera-scm-server.log
 ## 管理集群
 
 首页Dashboard。
-[![image](https://xuchao918.github.io/images/cdh-09.png)](https://xuchao918.github.io/images/cdh-09.png)
+![](./imgs/cdhinstall/8.png)
 
 ## 卸载Cloudera Manager
 
