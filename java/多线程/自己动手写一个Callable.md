@@ -61,7 +61,7 @@ public abstract class MyCallable<T>  {
 
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-    private T result = null;
+    private valatile T result = null;
 
     public abstract T call();
 

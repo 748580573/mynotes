@@ -1521,9 +1521,10 @@ redis服务的端口设置
 
 ### daemonize守护进程方式运行（后台运行）
 
-````she
-By default Redis does not run as a daemon. Use 'yes' if you need it.
-Note that Redis will write a pid file in /var/run/redis.pid when daemonized.
+````shell
+#By default Redis does not run as a daemon. Use 'yes' if you need it.
+#Note that Redis will write a pid file in /var/run/redis.pid when daemonized.
+daemonized yes
 ````
 
 ### pidfile进程文件
@@ -1538,7 +1539,7 @@ redis会尽力创建pid文件：如果Redis无法创建它不会发生任何不�
 
 ### loglevel设置日志等级
 
-````
+````shell
 # debug (a lot of information, useful for development/testing)
 # verbose (many rarely useful info, but not a mess like the debug level)
 # notice (moderately verbose, what you want in production probably) 生产环境使用
