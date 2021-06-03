@@ -867,29 +867,31 @@ OPTIONS说明：
 
 使用当前目录的 Dockerfile 创建镜像，标签为 runoob/ubuntu:v1。
 
-```
+```shell
 docker build -t runoob/ubuntu:v1 . 
 ```
 
 使用URL **github.com/creack/docker-firefox** 的 Dockerfile 创建镜像。
 
-```
+```shell
 docker build github.com/creack/docker-firefox
 ```
 
 也可以通过 -f Dockerfile 文件的位置：
 
-```
+```shell
 $ docker build -f /path/to/a/Dockerfile .
 ```
 
 在 Docker 守护进程执行 Dockerfile 中的指令前，首先会对 Dockerfile 进行语法检查，有语法错误时会返回：
 
-```
+```shell
 $ docker build -t test/myapp .
 Sending build context to Docker daemon 2.048 kB
 Error response from daemon: Unknown instruction: RUNCMD
 ```
+
+docker build 最后的 . 号，其实是在指定镜像构建过程中的上下文环境的目录
 
 ### history 命令
 
