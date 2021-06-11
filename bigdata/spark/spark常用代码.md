@@ -77,3 +77,37 @@ dataset = spark.read()
 	data.show();
 }
 ```
+
+## 通过sql获取json里的数据
+
+get_json_object(string json_string, string path)
+
+说明：
+第一个参数填写json对象变量，第二个参数使用$表示json变量标识，然后用 . 或 [] 读取对象或数组；如果输入的json字符串无效，那么返回NULL。
+
+````shell
+with data_table as (select  "{
+  \"timestamp\": \"2021-03-23T06:45:11.460Z\",
+  \"metadata\": {
+    \"beat\": \"filebeat\",
+    \"type\": \"doc\",
+    \"version\": \"6.6.1\",
+    \"topic\": \"gateway_track_log\"
+  },
+  \"service_port\": \"1111\",
+  \"service_name\": \"gateway\",
+  \"service_ip\": [{\"ip_a\":\"100.100.89.09\"},{\"ip_b\":\"100.100.89.10\"}],
+  \"center_name\": \"open\"
+}" as col) 
+select get_json_object(col,'$.timestamp') as `timestamp`,
+       get_json_object(col,'$.metadata.type') as metadata_type,
+       get_json_object(col,'$.service_ip[0].ip_a') as service_ip_a 
+  from data_table;
+````
+
+## 日期作差datediff
+
+datediff(endDate, startDate) - Returns the number of days from `startDate` to `endDate`.
+
+Examples:`> SELECT datediff('2009-07-31', '2009-07-30');`
+
