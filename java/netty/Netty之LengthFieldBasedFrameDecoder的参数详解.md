@@ -237,7 +237,7 @@ frameLength = frameLength + lengthAdjustment + lengthFieldOffset + lengthFieldLe
 
 ![](./imgs/fieldlengthdecoder/3.png)
 
-但是有的时候长度域表示的长度不仅仅是body的长度，还可能包含长度域本身长度，也就是header+body，因此需要使用lengthAdjustment来调整。例如：
+但是有的时候长度域表示的长度不仅仅是body的长度，还可能包含消息头，也就是header+body，因此需要使用lengthAdjustment来调整。例如：
 
 ````shell
 BEFORE DECODE (14 bytes)         AFTER DECODE (14 bytes)
@@ -253,6 +253,12 @@ BEFORE DECODE (14 bytes)         AFTER DECODE (14 bytes)
 - lengthFieldLength=2：长度域2个字节。
 - lengthAdjustment=-2：因为长度域为总长度，所以我们需要修正数据长度，也就是减去2。
 - initialBytesToStrip=0：我们发现接收的数据没有长度域的数据，所以要跳过长度域的2个字节。
+
+> **思考：为什么这里的lengthAdjustment的为负二呢？**
+>
+> 这里需要进入到源码中去看。因为frameLength = frameLength + lengthAdjustment + lengthFieldOffset + lengthFieldLength。
+>
+> 而此时fremeLength的实际长度并不是body的长度，而是body+header的长度，即length(body) + length(Length) =length(body) + lengthFieldLength ，因此需要将lengthAdjustment设置为-2，去减掉那多加出来的lengthFieldLength。
 
 除了上面这种情况需要lengthAdjustment进行调整，还会有其他的情况，例如在Length字段与body字段之间还存在其他的字段，这个时候我们也需要对lengthAdjustment进行调整。
 
