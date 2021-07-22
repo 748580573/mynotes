@@ -254,7 +254,7 @@ BEFORE DECODE (14 bytes)         AFTER DECODE (14 bytes)
 - lengthAdjustment=-2：因为长度域为总长度，所以我们需要修正数据长度，也就是减去2。
 - initialBytesToStrip=0：我们发现接收的数据没有长度域的数据，所以要跳过长度域的2个字节。
 
-> **思考：为什么这里的lengthAdjustment的为负二呢？**
+> **思考：为什么这里的lengthAdjustment的为-2呢？**
 >
 > 这里需要进入到源码中去看。因为frameLength = frameLength + lengthAdjustment + lengthFieldOffset + lengthFieldLength。
 >
@@ -276,6 +276,8 @@ BEFORE DECODE (16 bytes)                    AFTER DECODE (13 bytes)
 - lengthFieldLength=2：长度域2个字节。
 - lengthAdjustment=1：我们需要把hdr2+body当做body处理，所以数据长度需要加1。
 - initialBytesToStrip=3：接收数据不包括hdr1和长度域相同，所以需要跳过3个字节。
+
+> **思考：为什么这里的lengthAdjustment的为1呢？**
 
 ### initialBytesToStrip
 
