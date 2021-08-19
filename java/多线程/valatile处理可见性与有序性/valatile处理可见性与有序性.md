@@ -101,7 +101,15 @@ vt.sign = true 通知 while (!sign) 结束！
 
 ### 无volatile时，内存变化
 
-![](./imgs/4.png)
+![](./imgs/2.png)
+
+首先是当 sign 没有 volatitle 修饰时 public boolean sign = false;，线程 01 对变量进行操作，线程 02 并不会拿到变化的值。所以程序也就不会输出结果"阿楼哈"
+
+### 有 volatile 时，内存变化
+
+![](./imgs/3.png)
+
+当我们把变量使用 volatile 修饰时 public volatile boolean sign = false;， 线程 01 对变量进行操作时，会把变量变化的值强制刷新的到主内存。当线程 02获取值时，会把自己的内存里的 sign 值过期掉，之后从主内存中读取。所以添 加关键字后程序如预期输出结果。
 
 ## 什么是 Java 内存模型？
 
@@ -179,7 +187,7 @@ class VolatileExample {
 
 我们将规则 3 的传递性应用到我们的例子中，会发生什么呢？可以看下面这幅图：
 
-![](./img/valatile/1.png)
+![](./imgs/1.png)
 
 从图中，我们可以看到：
 
