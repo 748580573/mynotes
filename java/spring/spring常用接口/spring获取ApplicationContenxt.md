@@ -1,6 +1,6 @@
  在服务器启动过程中，spring容器也会初始化，那么当然，Spring的ApplicationContext对象肯定也在这个过程中会被初始化了，那么我们如何在java类中手动去获取得到这个对象呢？
 
-  首先， 我们为什么要去获取这个ApplicationContext对象？，获取到了我们***\*能干什么\****呢？ ***\*-- 能手动从Spring获取所需要的bean\****
+  首先， 我们为什么要去获取这个ApplicationContext对象？，获取到了我们能干什么呢？ -- 能手动从Spring获取所需要的bean
 
 ```java
 // 获取bean 方法1
@@ -13,9 +13,9 @@ public static <T> T getBean(Class<T> c){
 }
 ```
 
-其次，***\*怎样获取\****得到这个ApplicationContext对象？
+其次，怎样获得到这个ApplicationContext对象？
 
-***\*1、手动创建ApplicationContext对象：\****
+1、手动创建ApplicationContext对象：
 
 ```java
 private LsjmUserServiceImpl user = null;
@@ -37,7 +37,7 @@ public void getBefore(){
 
  
 
-***\*2、通过Spring的工具类WebApplicationContextUtils 获取\****
+2、通过Spring的工具类WebApplicationContextUtils 获取、
 
 ```java
 // Spring中获取ServletContext对象，普通类中可以这样获取
@@ -54,7 +54,7 @@ ApplicationContext ac = WebApplicationContextUtils.getWebApplicationContext(sc);
 
  
 
-***\*3、写一个工具类 比如BaseHolder 实现ApplicationContextAware接口\****
+3、写一个工具类 比如BaseHolder 实现ApplicationContextAware接口
 
 ```java
 package com.chaol.system;
@@ -88,9 +88,9 @@ public class BaseHolder implements ApplicationContextAware {
 }
 ```
 
- ***\*注意：写完了工具类，还需要在applicationContext.xml中配置 一行，让Spring进行对象管理\****：
+ 注意：写完了工具类，还需要在applicationContext.xml中配置 一行，让Spring进行对象管理：
 
-<bean id="baseHolder" class="com.chaol.system.BaseHolder" lazy-init="false" />  ***\*或者也可以直接用注解的方式，在类上注解@Component；\****
+<bean id="baseHolder" class="com.chaol.system.BaseHolder" lazy-init="false" />  或者也可以直接用注解的方式，在类上注解@Component；
 
  
 
