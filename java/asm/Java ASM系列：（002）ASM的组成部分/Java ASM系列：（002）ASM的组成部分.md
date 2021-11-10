@@ -1,0 +1,265 @@
+# Java ASM系列：（002）ASM的组成部分
+
+> 转载自：https://blog.51cto.com/lsieun/2926922
+
+## 1. ASM的两个组成部分
+
+从组成结构上来说，ASM分成两部分，一部分为Core API，另一部分为Tree API。
+
+- 其中，Core API包括`asm.jar`、`asm-util.jar`和`asm-commons.jar`；
+- 其中，Tree API包括`asm-tree.jar`和`asm-analysis.jar`。
+
+![](./imgs/1.png)
+
+
+
+从两者的关系来说，Core API是基础，而Tree API是在Core API的这个基础上构建起来的。
+
+从ASM API演进的历史来讲，先有Core API，后有Tree API。最初，在2002年，Eric Bruneton等发表了一篇文章，即《 ASM: a code manipulation tool to implement adaptable systems》。在这篇文章当中，最早提出了ASM的设计思路。当时，ASM只包含13个类文件，Jar包的大小只有21KB。这13个类文件，就是现在所说的Core API的雏形，但当时并没有提出Core API这样的概念。随着时代的变化，人们对于修改Java字节码提出更多的需求。为了满足人们的需求，ASM就需要添加新的类。类的数量变多了，代码的管理也就变得困难起来。为了更好的管理ASM的代码，就将这些类（按照功能的不同）分配到不同的Jar包当中，这样就逐渐衍生出Core API和Tree API的概念。
+
+## 2. Core API概览
+
+ASM Core API概览，就是对`asm.jar`、`asm-util.jar`和`asm-commons.jar`文件里包含的主要类成员进行介绍。
+
+### 2.1 asm.jar
+
+在asm.jar文件中，一共包含了30多个类，我们会介绍其中10个类。那么，剩下的20多个类，为什么不介绍呢？因为剩下的20多个主要起到“辅助”的作用，它们更多的倾向于是“幕后工作者”；而“登上舞台表演的”则是属于那10个类。
+
+在“第二章”当中，我们会主要介绍从“无”到“有”生成一个新的类，其中会涉及到ClassVisitor、ClassWriter、FieldVisitor、FieldWriter、MethodVisitor、MethodWriter、Label和Opcodes类。
+
+在“第三章”当中，我们会主要介绍修改“已经存在的类”，使之内容发生改变，其中会涉及到ClassReader和Type类。
+
+在这10个类当中，最重要的是三个类，即ClassReader、ClassVisitor和ClassWriter类。这三个类的关系，可以描述成下图：
+
+![](./imgs/2.png)
+
+这三个类的作用，可以简单理解成这样：
+
+* ClassReader类，负责读取.class文件里的内容，然后拆分成各个不同的部分。
+* ClassVisitor类，负责对.class文件中某一部分里的信息进行修改。
+* ClassWriter类，负责将各个不同的部分重新组合成一个完整的.class文件。
+
+在“第二章”当中，主要围绕着ClassVisitor和ClassWriter这两个类展开，因为在这个部分，我们是从“无”到“有”生成一个新的类，不需要Cla***eader类的参与。
+
+在“第三章”当中，就需要Cla***eader、ClassVisitor和ClassWriter这三个类的共同参与。
+
+### 2.2 asm-util.jar
+
+asm-util.jar主要包含的是一些工具类。
+
+在下图当中，可以看到asm-util.jar里面包含的具体类文件。这些类主要分成两种类型：Check开头和Trace开头。
+
+以Check开头的类，主要负责检查（Check）生成的.class文件内容是否正确。
+
+以Trace开头的类，主要负责将.class文件的内容打印成文字输出。根据输出的文字信息，可以探索或追踪（Trace）.class文件的内部信息。
+
+![](./imgs/3.png)
+
+在`asm-util.jar`当中，主要介绍`CheckClassAdapter`类和`TraceClassVisitor`类，也会简略的说明一下`Printer`、`ASMifier`和`Textifier`类。
+
+在“第四章”当中，会介绍`asm-util.jar`里的内容。
+
+### 2.3 asm-commons.jar
+
+`asm-commons.jar`主要包含的是一些**常用功能类**。
+
+在下图当中，可以看到`asm-commons.jar`里面包含的具体类文件。
+
+![](./imgs/4.png)
+
+我们会介绍到其中的AdviceAdapter、AnalyzerAdapter、ClassRemapper、GeneratorAdapter、InstructionAdapter、LocalVariableSorter、SerialVersionUIDAdapter和StaticInitMerger类。
+
+在“第四章”当中，介绍asm-commons.jar里的内容。
+
+另外，一个非常容易混淆的问题就是，asm-util.jar与asm-commons.jar有什么区别呢？在asm-util.jar里，它提供的是通用性的功能，没有特别明确的应用场景；而在asm-commons.jar里，它提供的功能，都是为解决某一种特定场景中出现的问题而提出的解决思路。
+
+## 3. 搭建ASM开发环境
+
+- JDK版本：1.8.0_261
+- Maven版本：3.8.1
+- IDEA：2021.1.2 （Community Edition）
+
+
+
+````shell
+$ java -version
+java version "1.8.0_261"
+Java(TM) SE Runtime Environment (build 1.8.0_261-b12)
+Java HotSpot(TM) 64-Bit Server VM (build 25.261-b12, mixed mode)
+
+$ mvn -version
+Apache Maven 3.8.1 (05c21c65bdfed0f71a2f2ada8b84da59348c4c5d)
+Maven home: D:\Software\apache-maven
+Java version: 1.8.0_261, vendor: Oracle Corporation, runtime: C:\Program Files\Java\jdk1.8.0_261\jre
+Default locale: zh_CN, platform encoding: GBK
+OS name: "windows 7", version: "6.1", arch: "amd64", family: "windows"
+````
+
+### 3.1 修改pom.xml
+
+新建一个maven项目，取名为`asm-maven`，修改其中的`pom.xml`文件，添加ASM的Jar包依赖。打开`pom.xml`文件，并添加如下内容：
+
+````xml
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>1.8</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <asm.version>9.0</asm.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>${asm.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-commons</artifactId>
+            <version>${asm.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-util</artifactId>
+            <version>${asm.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-tree</artifactId>
+            <version>${asm.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-analysis</artifactId>
+            <version>${asm.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Java Compiler -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <fork>true</fork>
+                    <compilerArgs>
+                        <arg>-g</arg>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+````
+
+### 3.2 使用ASM
+
+这个部分涉及的代码，并不需要记忆和理解，主要是为了让大家对ASM的使用有一个初步的认识，为了验证ASM的开发环境是能够正常使用的。
+
+#### 3.2.1 预期目标
+
+````shell
+package sample;
+
+public class HelloWorld {
+    @Override
+    public String toString() {
+        return "This is a HelloWorld object.";
+    }
+}
+````
+
+注意，我们不需要去写这样一个`sample/HelloWorld.java`文件，只是生成的`HelloWorld`类和这里的Java代码是一样的效果。
+
+#### 3.2.2 编码实现
+
+````java
+package com.example;
+
+import org.objectweb.asm.*;
+
+public class HelloWorldDump implements Opcodes {
+
+    public static byte[] dump() {
+        ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+
+        cw.visit(V1_8, ACC_PUBLIC | ACC_SUPER, "sample/HelloWorld", null, "java/lang/Object", null);
+
+        {
+            MethodVisitor mv1 = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+            mv1.visitCode();
+            mv1.visitVarInsn(ALOAD, 0);
+            mv1.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+            mv1.visitInsn(RETURN);
+            mv1.visitMaxs(1, 1);
+            mv1.visitEnd();
+        }
+        {
+            MethodVisitor mv2 = cw.visitMethod(ACC_PUBLIC, "toString", "()Ljava/lang/String;", null, null);
+            mv2.visitCode();
+            mv2.visitLdcInsn("This is a HelloWorld object.");
+            mv2.visitInsn(ARETURN);
+            mv2.visitMaxs(1, 1);
+            mv2.visitEnd();
+        }
+        cw.visitEnd();
+
+        return cw.toByteArray();
+    }
+}
+
+````
+
+#### 3.2.3 验证结果
+
+````java
+package com.example;
+
+public class MyClassLoader extends ClassLoader {
+    @Override
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+        if ("sample.HelloWorld".equals(name)) {
+            byte[] bytes = HelloWorldDump.dump();
+            Class<?> clazz = defineClass(name, bytes, 0, bytes.length);
+            return clazz;
+        }
+
+        throw new ClassNotFoundException("Class Not Found: " + name);
+    }
+}
+
+````
+
+````java
+package com.example;
+
+public class HelloWorldRun {
+    public static void main(String[] args) throws Exception {
+        MyClassLoader classLoader = new MyClassLoader();
+        Class<?> clazz = classLoader.loadClass("sample.HelloWorld");
+        Object instance = clazz.newInstance();
+        System.out.println(instance);
+    }
+}
+
+````
+
+运行之后的输出结果：
+
+````java
+This is a HelloWorld object.
+````
+
+## 4. 总结
+
+本文主要是对ASM的组成部分进行了介绍，内容总结如下：
+
+- 第一点，ASM由Core API和Tree API两个部分组成。
+- 第二点，Core API概览，就是对`asm.jar`、`asm-commons.jar`和`asm-util.jar`文件里包含的主要类成员进行介绍。
+- 第三点，通过一个简单的示例，能够快速搭建起ASM的开发环境。
