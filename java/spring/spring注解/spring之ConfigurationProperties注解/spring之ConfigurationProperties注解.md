@@ -1,7 +1,5 @@
 # Spring之@ConfigurationProperties注解
 
-> 摘自：https://www.cnblogs.com/tian874540961/p/12146467.html
-
 ## 前言
 
 最近在思考使用java config的方式进行配置，java config是指基于java配置的spring。传统的Spring一般都是基本xml配置的，后来spring3.0新增了许多java config的注解，特别是spring boot，基本都是清一色的java config。
@@ -50,7 +48,7 @@ Spring源码中大量使用了ConfigurationProperties注解，比如`server.port
 ### 配置文件内容
 
 ```
-Copy#数据源
+#数据源
 spring.datasource.druid.write.url=jdbc:mysql://localhost:3306/jpa
 spring.datasource.druid.write.username=root
 spring.datasource.druid.write.password=1
@@ -65,7 +63,6 @@ spring.datasource.druid.read.driver-class-name=com.mysql.jdbc.Driver
 ### java代码
 
 ```
-Copy@Configuration
 public class DruidDataSourceConfig {
     /**
      * DataSource 配置
@@ -104,7 +101,7 @@ public class DruidDataSourceConfig {
 ### 配置文件内容
 
 ```
-Copyspring.datasource.url=jdbc:mysql://127.0.0.1:8888/test?useUnicode=false&autoReconnect=true&characterEncoding=utf-8
+spring.datasource.url=jdbc:mysql://127.0.0.1:8888/test?useUnicode=false&autoReconnect=true&characterEncoding=utf-8
 spring.datasource.username=root
 spring.datasource.password=root
 spring.datasource.driver-class-name=com.mysql.jdbc.Driver
@@ -114,7 +111,7 @@ spring.datasource.type=com.alibaba.druid.pool.DruidDataSource
 ### java代码
 
 ```
-Copy@ConfigurationProperties(prefix = "spring.datasource")
+ConfigurationProperties(prefix = "spring.datasource")
 @Component
 public class DatasourcePro {
 
@@ -173,7 +170,7 @@ public class DatasourcePro {
 
 ### 用法
 
-```
+```java
 Copy@Controller
 @RequestMapping(value = "/config")
 public class ConfigurationPropertiesController {
@@ -197,7 +194,134 @@ public class ConfigurationPropertiesController {
 }
 ```
 
+## 自定义配置Bean
+
+通过上文我们知道了，与spring有关的starter项目都采用了Java config的方式，因此我们也可以仿照它们来定义自己的java config
+
+### 依赖引入
+
+````xml
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <version>${spring.boot.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <version>${spring.boot.version}</version>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+````
+
+* 引入spring-boot-starter-web是为了偷懒，因为该包就引用了我们所需要的的spring-boot的包了
+* 引入spring-boot-configuration-processor可以使得IDE在我们在配置文件的时候给我们提示，后文会讲到。
+
+### 创建项目
+
+创建项目confg-test
+
+目录结构：
+
+````java
+├─src
+│  ├─main
+│  │  ├─java
+│  │  │  └─com
+│  │  │      └─heng
+│  │  │          └─config
+|  |  |             └─MyConfig.java
+|  |  |             └─TestConfig.java
+│  │  └─resources
+│  │      └─META-INF
+│  │      	└─spring.factories    
+│  └─test
+│      └─java
+````
+
+编写MyConfig类
+
+```java
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+@ConfigurationProperties(prefix = "my.config")
+public class MyConfig {
+
+    private String hostname;
+
+    private String port;
+
+    private String protocol;
+
+    public String getHostname() {
+        return hostname;
+    }
+
+    public void setHostname(String hostname) {
+        this.hostname = hostname;
+    }
+
+    public String getPort() {
+        return port;
+    }
+
+    public void setPort(String port) {
+        this.port = port;
+    }
+
+    public String getProtocol() {
+        return protocol;
+    }
+
+    public void setProtocol(String protocol) {
+        this.protocol = protocol;
+    }
+}
+```
+
+编写TestConfig类
+
+```
+@Configuration
+@EnableConfigurationProperties(MyConfig.class)
+public class TestConfig {
+
+}
+```
+
+编写spring.factories 文件
+
+````java
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=com.heng.config.TestConfig
+````
+
+然后将confg-test打包
+
+### 使用自定义的配置bean
+
+在spring-boot项目中引入confg-test依赖
+
+````xml
+
+        <dependency>
+            <groupId>com.heng</groupId>
+            <artifactId>config-test</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+````
+
+然后编写applicatoin.properties
+
+![](./imgs/1.png)
+
+> 注：只有引入了spring-boot-configuration-processor依赖后，在IDE编写application.properties的时候才会有自动提示
+
 ## 总结
 
 1. @ConfigurationProperties 和 @value 有着相同的功能,但是 @ConfigurationProperties的写法更为方便
 2. @ConfigurationProperties 的 POJO类的命名比较严格,因为它必须和prefix的后缀名要一致, 不然值会绑定不上, 特殊的后缀名是“driver-class-name”这种带横杠的情况,在POJO里面的命名规则是 **下划线转驼峰** 就可以绑定成功，所以就是 “driverClassName”
+
+> 本文参考：https://www.cnblogs.com/tian874540961/p/12146467.html
