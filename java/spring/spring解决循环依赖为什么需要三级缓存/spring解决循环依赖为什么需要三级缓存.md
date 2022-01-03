@@ -2,6 +2,12 @@
 
 > 这里指的是单例的、非构造依赖的循环引用。很多人都知道Spring用了三层缓存来解决循环依赖，但是不知道其原因，为什么是三级缓存？二级缓存不行吗？一级缓存不可以 ？
 
+### 问题分析
+
+当使用spring IOC管理bean的时候，如果存在对象之间的循环引用就会出现无限递归创建bean导致程序stack over。
+
+![](./imgs/1.png)
+
 ### 三级缓存
 
 Spring 解决循环依赖的核心就是提前暴露对象，而提前暴露的对象就是放置于第二级缓存中。缓存的底层都是Map，至于它们属于第几层是由Spring获取数据顺序以及其作用来表现的。
@@ -85,3 +91,151 @@ addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
 三级缓存`singletonFactories`，其职责就是包装一个bean，有回调逻辑，所以它的作用非常清晰，并且只能处于第三层。
 
 在实际使用中，要获取一个bean，先从一级缓存一直查找到三级缓存，缓存bean的时候是从三级到一级的顺序保存，并且缓存bean的过程中，三个缓存都是互斥的，只会保持bean在一个缓存中，而且，最终都会在一级缓存中。
+
+
+
+### 图解循环依赖处理过程
+
+1. 循环依赖大致分为10个阶段，我们将一一进行讲解。
+2. 实例化 A，此时 A 还未完成属性填充和初始化方法（@PostConstruct）的执行，A 只是一个半成品。为 A 创建一个 Bean 工厂，并放入到  singletonFactories 中。
+3. 发现 A 需要注入 B 对象，但是一级、二级、三级缓存均为发现对象 B。
+4. 实例化 B，此时 B 还未完成属性填充和初始化方法（@PostConstruct）的执行，B 只是一个半成品。
+5. 为 B 创建一个 Bean 工厂，并放入到  singletonFactories 中。
+6. 发现 B 需要注入 A 对象，此时在一级、二级未发现对象 A，但是在三级缓存中发现了对象 A，从三级缓存中得到对象 A，并将对象 A 放入二级缓存中，同时删除三级缓存中的对象 A。（注意，此时的 A 还是一个半成品，并没有完成属性填充和执行初始化方法）
+7. 将对象 A 注入到对象 B 中。
+8. 对象 B 完成属性填充，执行初始化方法，并放入到一级缓存中，同时删除二级缓存中的对象 B。（此时对象 B 已经是一个成品）
+9. 对象 A 得到对象 B，将对象 B 注入到对象 A 中。（对象 A 得到的是一个完整的对象 B）
+10. 对象 A 完成属性填充，执行初始化方法，并放入到一级缓存中，同时删除二级缓存中的对象 A。
+
+
+
+
+下面我们只以A、B之间的循环依赖来举例，这样也方便理解。
+
+![](./imgs/2.png)
+
+1. 实例化A，此时A未进行属性填充以及初始化方法调用，A 只是一个半成品。
+2. 为 A 创建一个 Bean 工厂，并放入到 singletonFactories 中。
+
+以上两步的代码的代码如下：
+
+AbstractAutowireCapableBeanFactory.createBean
+
+````java
+ protected Object doCreateBean(String beanName, BeanDefinition beanDefinition, Object[] args) {
+        Object bean = null;
+        try {
+            // 实例化 Bean
+            bean = createBeanInstance(beanDefinition, beanName, args);
+            // 处理循环依赖，将实例化后的Bean对象提前放入缓存中暴露出来
+            if (beanDefinition.isSingleton()) {
+                Object finalBean = bean;
+                addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, beanDefinition, finalBean));
+            }
+            //省略n行代码
+        } catch (Exception e) {
+            throw new BeansException("Instantiation of bean failed", e);
+        }
+     //省略n行代码
+    }
+````
+
+![](./imgs/3.png)
+
+此时A将自己以FactoryObject的方式提前暴露到singletonFactories中
+
+3. 发现 A 需要注入 B 对象，但是一级、二级、三级缓存均为发现对象 B，则尝试创建B
+
+    protected void applyPropertyValues(String beanName, Object bean, BeanDefinition beanDefinition) {
+        try {
+            PropertyValues propertyValues = beanDefinition.getPropertyValues();
+            for (PropertyValue propertyValue : propertyValues.getPropertyValues()) {
+                
+                if (value instanceof BeanReference) {
+                    // A 依赖 B，获取 B 的实例化
+                    BeanReference beanReference = (BeanReference) value;
+                    value = getBean(beanReference.getBeanName());
+                }
+                //省略n行代码
+            }
+        } catch (Exception e) {
+            throw new BeansException("Error setting property values：" + beanName);
+        }
+    }
+
+这个getBean方法会尝试去IOC容器中拿去到B对象，如果没有B对象则会创建B。
+
+4. 实例化 B，此时 B 还未完成属性填充和初始化方法（@PostConstruct）的执行，B 只是一个半成品。
+5. 为 B 创建一个 Bean 工厂，并放入到 singletonFactories 中。
+
+![](./imgs/4.png)
+
+6. 发现 B 需要注入 A 对象，此时在一级、二级未发现对象 A，但是在三级缓存中发现了对象 A，从三级缓存中得到对象 A，并将对象 A 放入二级缓存中，同时删除三级缓存中的对象 A。（注意，此时的 A 还是一个半成品，并没有完成属性填充和执行初始化方法）
+
+DefaultSingletonBeanRegistry.getSingleton
+
+````java
+    public Object getSingleton(String beanName) {
+        Object singleBean = singletonObjects.get(beanName);
+        if (null == singleBean){
+            singleBean = earlySingletonObjects.get(beanName);
+
+            if (singleBean == null){
+                //在singletonFactories找到了A
+                ObjectFactory<?> singleBeanFactory = singletonFactories.get(beanName);
+                if (singleBeanFactory != null){
+                    singleBean = singleBeanFactory.getObject();
+                    // 把三级缓存中的代理对象中的真实对象获取出来，放入二级缓存中,提前暴露未未填充属性的bean对象
+                    earlySingletonObjects.put(beanName, singleBean);
+                    singletonFactories.remove(beanName);
+                }
+            }
+        }
+        return singleBean;
+    }
+````
+
+7. 将对象 A 注入到对象 B 中。
+
+![](./imgs/5.png)
+
+8. 对象 B 完成属性填充，执行初始化方法，并放入到一级缓存中，同时删除二级缓存中的对象 B。（此时对象 B 已经是一个成品）
+
+AbstractAutowireCapableBeanFactory.doCreateBean
+
+````java
+  protected Object doCreateBean(String beanName, BeanDefinition beanDefinition, Object[] args) {
+        Object bean = null;
+        try {
+            
+            // 给 Bean 填充属性
+            applyPropertyValues(beanName, bean, beanDefinition);
+          
+        } catch (Exception e) {
+            throw new BeansException("Instantiation of bean failed", e);
+        }
+
+        if (beanDefinition.isSingleton()) {
+            // 从容器中获取到B
+            exposedObject = getSingleton(beanName);
+            //将获取到的B放入到singletonObjects中去
+            registerSingleton(beanName, exposedObject);
+        }
+        return exposedObject;
+      
+    }
+````
+
+![](./imgs/6.png)
+
+9. 对象 A 得到对象 B，将对象 B 注入到对象 A 中。（对象 A 得到的是一个完整的对象 B）
+
+![](./imgs/7.png)
+
+10. 对象 A 完成属性填充，执行初始化方法，并放入到一级缓存中，同时删除二级缓存中的对象 A。
+
+![](./imgs/8.png)
+
+自此，spring处理bean的循环依赖的过程完毕。可以看到不用状态的bean是处于不同Object容器中去的，然后创建完毕，可以直接使用的bean最后都会落到singletonObjects中去，这也体现了整个IOC模型的责任划分。
+
+> 参考：https://juejin.cn/post/6882266649509298189
