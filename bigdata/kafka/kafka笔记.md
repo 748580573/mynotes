@@ -27,7 +27,7 @@ kafka下载地址：http://kafka.apache.org/downloads，本文使用的2.5.0版�
 
 ````shell
 每一个broker在集群中的唯一表示，要求是正数，kafka及其根据id来识别broker机器。当该服务器的IP地址发生改变时，broker.id没有变化，则不会影响consumers的消息情况
-broker.id =0
+broker.id = 0
 
 kafka数据的存放地址，多个地址的话用逗号分割/kafka/kafka-logs-1，/kafka/kafka-logs-2
 log.dirs=/kafka/kafka-logs
@@ -291,6 +291,29 @@ Topic: test	PartitionCount: 1	ReplicationFactor: 1	Configs: segment.bytes=107374
  ./kafka-topics.sh  --delete --bootstrap-server localhost:9092 --topic  test
 ````
 
+### 查看集群中消费者组的信息
+
+````shell
+> bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list
+ 
+test-consumer-group
+````
+
+### 查看某个消费者组的情况
+
+```shell
+> bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group my-group
+ 
+TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                    HOST            CLIENT-ID
+topic3          0          241019          395308          154289          consumer2-e76ea8c3-5d30-4299-9005-47eb41f3d3c4 /127.0.0.1      consumer2
+topic2          1          520678          803288          282610          consumer2-e76ea8c3-5d30-4299-9005-47eb41f3d3c4 /127.0.0.1      consumer2
+topic3          1          241018          398817          157799          consumer2-e76ea8c3-5d30-4299-9005-47eb41f3d3c4 /127.0.0.1      consumer2
+topic1          0          854144          855809          1665            consumer1-3fc8d6f1-581a-4472-bdf3-3515b4aee8c1 /127.0.0.1      consumer1
+topic2          0          460537          803290          342753          consumer1-3fc8d6f1-581a-4472-bdf3-3515b4aee8c1 /127.0.0.1      consumer1
+topic3          2          243655          398812          155157          consumer4-117fe4d3-c6c1-4178-8ee9-eb4a3954bee0 /127.0.0.1      consumer4
+
+```
+
 ### 向kafka里生产消息
 
 ````shell
@@ -528,7 +551,7 @@ Pull消费不足之处在是：如果kafka没有数据，消费者可能陷入�
 
 Range分配策略是**面向每个主题**的，首先会对同一个主题里面的分区按照序号进行排序，并把消费者线程按照字母顺序进行排序。然后用分区数除以消费者线程数量来判断每个消费者线程消费几个分区。如果除不尽，那么前面几个消费者线程将会多消费一个分区。
 
-我们假设有个名为T1的主题，包含了7个分区，它有两个消费者（C0和C1），其中C0的num.streams(消费者线程) = 1，C1的num.streams = 2。排序后的分区是：0，1，2，3，4，5，6；消费者线程排序后是：C0-0，C1-0，C1-1；一共有7个分区，3个消费者线程，进行计算7/3=2…1，商为2余数为1，则每个消费者线程消费2个分区，并且前面1个消费者线程多消费一个分区，结果会是这样的：
+我们假设有个名为T1的主题，包含了7个分区，它有两个消费者组（C0和C1），其中C0的num.streams(消费者线程) = 1，C1的num.streams = 2。排序后的分区是：0，1，2，3，4，5，6；消费者线程排序后是：C0-0，C1-0，C1-1；一共有7个分区，3个消费者线程，进行计算7/3=2…1，商为2余数为1，则每个消费者线程消费2个分区，并且前面1个消费者线程多消费一个分区，结果会是这样的：
 
 | 消费者线程 | 对应消费的分区序号 |
 | ---------- | ------------------ |
