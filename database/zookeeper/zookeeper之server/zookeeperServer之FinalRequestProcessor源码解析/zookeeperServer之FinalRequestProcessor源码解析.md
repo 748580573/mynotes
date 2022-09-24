@@ -495,3 +495,5 @@ synchronized (zks.outstandingChanges) { // 同步块
 # **三、总结**
 
 本篇博文分析了请求处理链的FinalRequestProcessor，其通常是请求处理链的最后一个处理器，而对于请求处理链部分的分析也就到这里，还有其他的处理器再使用时再进行分析
+
+如果FinalRequestProcessor处理的事务性的请求 的话，就会将请求转给LearnerHandler处理，其源码解析[点击这里](../zookeeperServer之ProposalRequestProcessor源码解析/zookeeperServer之ProposalRequestProcessor源码解析.md)

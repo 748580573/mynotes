@@ -664,6 +664,8 @@ protected void pRequest2Txn(int type, long zxid, Request request, Record record,
 
 　　说明：该函数是对父接口函数的实现，其主要作用是将请求添加至submittedRequests队列进行后续处理（run函数中）。
 
-**三、总结**
+## **三、总结**
 
 　　针对PrepRequestProcessor的源码就分析到这里，其完成的业务逻辑也相对简单，其通常是处理链的第一个处理器
+
+关于PrepRequestProcessor的下一个处理器SyncRequestProcessor的源码解析，[点击此处](../zookeeperServer之SyncRequestProcessor源码解析/zookeeperServer之SyncRequestProcessor源码解析.md)查看。

@@ -283,6 +283,8 @@ public class SyncRequestProcessor extends Thread implements RequestProcessor {
 
 　　说明：该函数用于关闭SyncRequestProcessor处理器，其首先会在queuedRequests队列中添加一个结束请求，然后再判断SyncRequestProcessor是否还在运行，若是，则会等待其结束；之后判断toFlush队列是否为空，若不为空，则刷新到磁盘中。
 
-**三、总结**
+## **三、总结**
 
 　　本篇讲解了SyncRequestProcessor的工作原理，其主要作用包含将事务性请求刷新到磁盘，并且对请求进行快照处理。也谢谢各位园友的观看~****
+
+关于SyncRequestProcessor的下一个处理器FinalRequestProcessor的源码解析，[点击此处](../zookeeperServer之FinalRequestProcessor源码解析/zookeeperServer之FinalRequestProcessor源码解析.md)查看。
