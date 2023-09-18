@@ -19,6 +19,8 @@ commit: fd7ecd9c4599bef9f04c0986c4a0187f98a4396e
 
 ##  安装kubectl
 
+> minikube kubectl
+
 ````java
 [root@localhost home]# minikube kubectl
     > kubectl.sha256:  64 B / 64 B [-------------------------] 100.00% ? p/s 0s
@@ -98,6 +100,8 @@ Use "kubectl options" for a list of global command-line options (applies to all 
 
 ## 安装yum-utils
 
+>  yum install -y yum-utils
+
 ````java
 Loaded plugins: fastestmirror, langpacks
 Loading mirror speeds from cached hostfile
@@ -161,18 +165,18 @@ repo saved to /etc/yum.repos.d/docker-ce.repo
 
 ## 安装docker
 
-> yum-config-manager \
+>  sudo yum-config-manager \
 >
-> --add-repo\
+> ​    --add-repo \
 >
-> https://download.docker.com/linux/centos/docker-ce.repo
+> ​    https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
 >
 > yum install docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
 ````shell
 [root@localhost home]# yum-config-manager \
->   --add-repo\
->   https://download.docker.com/linux/centos/docker-ce.repo
+   --add-repo \
+   https://download.docker.com/linux/centos/docker-ce.repo
 [root@localhost home]# yum install docker-ce docker-ce-cli containerd.io docker-compose-plugin
 Loaded plugins: fastestmirror, langpacks
 Loading mirror speeds from cached hostfile
@@ -305,15 +309,60 @@ Created symlink from /etc/systemd/system/multi-user.target.wants/docker.service 
 
 
 
+````java
+[root@localhost yum.repos.d]# minikube start --kubernetes-version=v1.23.3 --image-mirror-country='cn' --force
+* minikube v1.31.2 on Centos 7.7.1908
+! minikube skips various validations when --force is supplied; this may lead to unexpected behavior
+* Automatically selected the docker driver. Other choices: none, ssh
+* The "docker" driver should not be used with root privileges. If you wish to continue as root, use --force.
+* If you are running minikube within a VM, consider using --driver=none:
+*   https://minikube.sigs.k8s.io/docs/reference/drivers/none/
+* Using image repository registry.cn-hangzhou.aliyuncs.com/google_containers
+* Using Docker driver with root privileges
+* Starting control plane node minikube in cluster minikube
+* Pulling base image ...
+    > index.docker.io/kicbase/sta...:  447.62 MiB / 447.62 MiB  100.00% 6.25 Mi
+! minikube was unable to download registry.cn-hangzhou.aliyuncs.com/google_containers/kicbase:v0.0.40, but successfully downloaded docker.io/kicbase/stable:v0.0.40 as a fallback image
+* Creating docker container (CPUs=2, Memory=2200MB) ...
+    > kubectl.sha256:  64 B / 64 B [-------------------------] 100.00% ? p/s 0s
+    > kubelet.sha256:  64 B / 64 B [-------------------------] 100.00% ? p/s 0s
+    > kubectl:  44.43 MiB / 44.43 MiB [--------------] 100.00% 3.14 MiB p/s 14s
+    > kubelet:  118.75 MiB / 118.75 MiB [------------] 100.00% 4.35 MiB p/s 28s                                                                        
+  - Generating certificates and keys ...
+  - Booting up control plane ...
+  - Configuring RBAC rules ...
+  - Using image registry.cn-hangzhou.aliyuncs.com/google_containers/storage-provisioner:v5
+* Verifying Kubernetes components...
+* Enabled addons: storage-provisioner, default-storageclass
+* kubectl not found. If you need it, try: 'minikube kubectl -- get pods -A'
+* Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
+````
+
+
+
 ## 测试kubectl命令
 
 > minikube kubectl -- get pods -A
 
+````java
+[root@localhost yum.repos.d]# minikube kubectl -- get pods -A
+NAMESPACE     NAME                               READY   STATUS    RESTARTS       AGE
+kube-system   coredns-65c54cc984-97f8k           1/1     Running   0              2m9s
+kube-system   etcd-minikube                      1/1     Running   0              2m22s
+kube-system   kube-apiserver-minikube            1/1     Running   0              2m24s
+kube-system   kube-controller-manager-minikube   1/1     Running   0              2m22s
+kube-system   kube-proxy-k949r                   1/1     Running   0              2m10s
+kube-system   kube-scheduler-minikube            1/1     Running   0              2m22s
+kube-system   storage-provisioner 
+````
+
+
+
 ## 为minikube取别名
 
-> vim .bashrc
+> vim ~/.bashrc
 >
-> source .bashrc
+> source ~/.bashrc
 >
 > kubectl get nodes
 
@@ -335,3 +384,11 @@ alias kubectl='minikube kubectl --'
 > kubectl run ngx --image=nginx:alpine
 >
 > kubectl get pows -w
+
+## 打开dashboard
+
+> minikube dashboard
+
+## 开启dashboard远程访问
+
+> kubectl proxy --port=8000 --address='192.168.73.128' --accept-hosts='^.*' &
